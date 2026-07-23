@@ -35,7 +35,10 @@ def generate_launch_description():
         additional_env={
             'RCUTILS_COLORIZED_OUTPUT': '1',
             'GLOG_minloglevel': '1',
-            'GLOG_v': '0'
+            # Ceres emits some internal diagnostics at VLOG(0), so zero is
+            # still noisy. A negative verbosity disables all VLOG output.
+            'GLOG_v': '-1',
+            'GLOG_vmodule': '*=-1'
         },
         parameters=[{
             'config_file': config_path,
