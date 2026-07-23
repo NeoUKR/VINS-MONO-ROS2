@@ -1,4 +1,5 @@
 #include "initial_sfm.h"
+#include <rcutils/logging_macros.h>
 
 GlobalSFM::GlobalSFM(){}
 
