@@ -439,8 +439,8 @@ bool Estimator::visualInitialAlign()
         Rs[i] = rot_diff * Rs[i];
         Vs[i] = rot_diff * Vs[i];
     }
-    RCUTILS_LOG_INFO("g0: %f, %f, %f", g.x(), g.y(), g.z());
-    RCUTILS_LOG_INFO("my R0: %f, %f, %f", Utility::R2ypr(Rs[0]).x(), Utility::R2ypr(Rs[0]).y(), Utility::R2ypr(Rs[0]).z()); 
+    RCUTILS_LOG_DEBUG("g0: %f, %f, %f", g.x(), g.y(), g.z());
+    RCUTILS_LOG_DEBUG("my R0: %f, %f, %f", Utility::R2ypr(Rs[0]).x(), Utility::R2ypr(Rs[0]).y(), Utility::R2ypr(Rs[0]).z());
 
     return true;
 }
@@ -628,7 +628,7 @@ bool Estimator::failureDetection()
 {
     if (f_manager.last_track_num < 2)
     {
-        RCUTILS_LOG_INFO(" little feature %d", f_manager.last_track_num);
+        RCUTILS_LOG_DEBUG("little feature %d", f_manager.last_track_num);
         //return true;
     }
     if (Bas[WINDOW_SIZE].norm() > 2.5)

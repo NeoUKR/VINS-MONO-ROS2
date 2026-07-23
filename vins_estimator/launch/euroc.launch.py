@@ -31,6 +31,12 @@ def generate_launch_description():
         name='vins_estimator',
         namespace='vins_estimator',
         output='screen',
+        emulate_tty=True,
+        additional_env={
+            'RCUTILS_COLORIZED_OUTPUT': '1',
+            'GLOG_minloglevel': '1',
+            'GLOG_v': '0'
+        },
         parameters=[{
             'config_file': config_path,
             'vins_folder': vins_path,

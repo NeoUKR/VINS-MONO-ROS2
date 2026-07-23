@@ -6,6 +6,23 @@ The product version uses four numeric components: `MAJOR.MINOR.FEATURE.PATCH`.
 Git tags use the corresponding `vMAJOR_MINOR_FEATURE_PATCH` format, with
 two-digit zero-padded components after the major version.
 
+## [v1_00_01_03] - 2026-07-23
+
+### Added
+
+- Periodically updated waiting status with current time, message counters, and
+  the latest IMU and feature timestamps.
+- Forced terminal color support for warning and error severity output.
+
+### Changed
+
+- Estimator launch now uses an emulated TTY so live status updates and colors
+  are rendered immediately.
+- Ceres progress output is suppressed at the INFO level, including during
+  initial SFM.
+- Low-level initialization and marginalization details are available only at
+  the DEBUG level.
+
 ## [v1_00_01_02] - 2026-07-23
 
 ### Changed
@@ -54,6 +71,7 @@ Initial release of the VINS-MONO ROS 2 port.
 - RViz configurations and sample benchmark data.
 - Initial project documentation and GPLv3 licensing information.
 
+[v1_00_01_03]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_03
 [v1_00_01_02]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_02
 [v1_00_01_01]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_01
 [v1_00_01_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_00

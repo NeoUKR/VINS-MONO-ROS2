@@ -45,6 +45,15 @@ void logStatistics(
 
 void finishRuntimeStatusLine();
 
+void logWaitingStatus(
+    const rclcpp::Logger &logger,
+    double current_stamp,
+    uint64_t imu_messages,
+    uint64_t feature_messages,
+    double last_imu_stamp,
+    double last_feature_stamp,
+    int period_ms);
+
 void pubOdometry(const Estimator &estimator, const std_msgs::msg::Header &header);
 
 void pubInitialGuess(const Estimator &estimator, const std_msgs::msg::Header &header);

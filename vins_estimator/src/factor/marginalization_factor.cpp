@@ -224,7 +224,7 @@ void MarginalizationInfo::marginalize()
             b.segment(idx_i, size_i) += jacobian_i.transpose() * it->residuals;
         }
     }
-    RCUTILS_LOG_INFO("summing up costs %f ms", t_summing.toc());
+    RCUTILS_LOG_DEBUG("summing up costs %f ms", t_summing.toc());
     */
     //multi thread
 

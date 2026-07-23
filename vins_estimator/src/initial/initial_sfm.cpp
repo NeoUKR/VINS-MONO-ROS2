@@ -44,7 +44,7 @@ bool GlobalSFM::solveFrameByPnP(Matrix3d &R_initial, Vector3d &P_initial, int i,
 	}
 	if (int(pts_2_vector.size()) < 15)
 	{
-		printf("unstable features tracking, please slowly move you device!\n");
+		RCUTILS_LOG_WARN("Unstable feature tracking; move the device slowly.");
 		if (int(pts_2_vector.size()) < 10)
 			return false;
 	}
@@ -273,6 +273,7 @@ bool GlobalSFM::construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 	}
 	ceres::Solver::Options options;
 	options.linear_solver_type = ceres::DENSE_SCHUR;
+	options.logging_type = ceres::SILENT;
 	//options.minimizer_progress_to_stdout = true;
 	options.max_solver_time_in_seconds = 0.2;
 	ceres::Solver::Summary summary;

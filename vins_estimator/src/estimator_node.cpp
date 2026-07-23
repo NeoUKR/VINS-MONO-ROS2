@@ -4,6 +4,8 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
+#include <algorithm>
 #include <rclcpp/rclcpp.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/opencv.hpp>
@@ -40,6 +42,11 @@ Eigen::Vector3d gyr_0;
 bool init_feature = 0;
 bool init_imu = 1;
 double last_imu_t = 0;
+std::atomic<uint64_t> imu_messages_received{0};
+std::atomic<uint64_t> feature_messages_received{0};
+std::atomic<double> last_imu_stamp_received{0.0};
+std::atomic<double> last_feature_stamp_received{0.0};
+std::atomic<bool> sensor_processing_started{false};
 
 const char *stateName(Estimator::SolverFlag state)
 {
@@ -192,6 +199,10 @@ getMeasurements()
 
 void imu_callback(const sensor_msgs::msg::Imu::SharedPtr imu_msg)
 {
+    imu_messages_received.fetch_add(1, std::memory_order_relaxed);
+    last_imu_stamp_received.store(
+        imu_msg->header.stamp.sec + imu_msg->header.stamp.nanosec * 1e-9,
+        std::memory_order_relaxed);
     if ((imu_msg->header.stamp.sec+imu_msg->header.stamp.nanosec * (1e-9)) <= last_imu_t)
     {
         RCUTILS_LOG_WARN("imu message in disorder!");
@@ -221,6 +232,10 @@ void imu_callback(const sensor_msgs::msg::Imu::SharedPtr imu_msg)
 
 void feature_callback(const sensor_msgs::msg::PointCloud::SharedPtr feature_msg)
 {
+    feature_messages_received.fetch_add(1, std::memory_order_relaxed);
+    last_feature_stamp_received.store(
+        feature_msg->header.stamp.sec + feature_msg->header.stamp.nanosec * 1e-9,
+        std::memory_order_relaxed);
     if (!init_feature)
     {
         //skip the first detected feature, which doesn't contain optical flow speed
@@ -252,6 +267,7 @@ void restart_callback(const std_msgs::msg::Bool::SharedPtr restart_msg)
         m_estimator.unlock();
         current_time = -1;
         last_imu_t = 0;
+        sensor_processing_started.store(false, std::memory_order_relaxed);
         std_msgs::msg::Header header;
         header.stamp = estimator_node->get_clock()->now();
         logStateTransition(previous_state, estimator.solver_flag, header);
@@ -283,6 +299,7 @@ void process()
         m_estimator.lock();
         for (auto &measurement : measurements)
         {
+            sensor_processing_started.store(true, std::memory_order_relaxed);
             auto img_msg = measurement.second;
             double dx = 0, dy = 0, dz = 0, rx = 0, ry = 0, rz = 0;
             for (auto &imu_msg : measurement.first)
@@ -436,7 +453,21 @@ int main(int argc, char **argv)
 #endif
     RCLCPP_INFO(n->get_logger(), "[STATE BEGIN] INITIALIZING stamp=%.9f",
                 n->get_clock()->now().seconds());
-    RCLCPP_INFO(n->get_logger(), "Waiting for image and IMU data.");
+    auto waiting_status_timer = n->create_wall_timer(
+        std::chrono::milliseconds(std::max(1, LOG_PERIOD_MS)),
+        [n]()
+        {
+            if (sensor_processing_started.load(std::memory_order_relaxed))
+                return;
+            logWaitingStatus(
+                n->get_logger(),
+                n->get_clock()->now().seconds(),
+                imu_messages_received.load(std::memory_order_relaxed),
+                feature_messages_received.load(std::memory_order_relaxed),
+                last_imu_stamp_received.load(std::memory_order_relaxed),
+                last_feature_stamp_received.load(std::memory_order_relaxed),
+                LOG_PERIOD_MS);
+        });
 
     registerPub(n);
 

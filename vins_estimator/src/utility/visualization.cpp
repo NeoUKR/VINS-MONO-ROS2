@@ -34,6 +34,27 @@ static std::chrono::steady_clock::time_point last_runtime_status_time;
 
 static std::shared_ptr<tf2_ros::TransformBroadcaster> br;
 
+static bool renderRuntimeStatus(
+    const rclcpp::Logger &logger,
+    const std::string &status,
+    int period_ms)
+{
+    if (!rcutils_logging_logger_is_enabled_for(
+            logger.get_name(), RCUTILS_LOG_SEVERITY_INFO))
+        return false;
+
+    const auto now = std::chrono::steady_clock::now();
+    std::lock_guard<std::mutex> lock(runtime_status_mutex);
+    if (runtime_status_active && period_ms > 0 &&
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - last_runtime_status_time).count() < period_ms)
+        return false;
+
+    last_runtime_status_time = now;
+    std::cout << "\r\033[2K" << status << std::flush;
+    runtime_status_active = true;
+    return true;
+}
 
 void registerPub(rclcpp::Node::SharedPtr n)
 {
@@ -86,20 +107,6 @@ void logStatistics(
     const rclcpp::Logger &logger,
     int period_ms)
 {
-    if (!rcutils_logging_logger_is_enabled_for(
-            logger.get_name(), RCUTILS_LOG_SEVERITY_INFO))
-        return;
-
-    const auto now = std::chrono::steady_clock::now();
-    {
-        std::lock_guard<std::mutex> lock(runtime_status_mutex);
-        if (runtime_status_active && period_ms > 0 &&
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                now - last_runtime_status_time).count() < period_ms)
-            return;
-        last_runtime_status_time = now;
-    }
-
     const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
     std::ostringstream status;
     status << std::fixed;
@@ -131,11 +138,8 @@ void logStatistics(
                << " processing_ms=" << std::setprecision(3) << processing_time_ms;
     }
 
-    {
-        std::lock_guard<std::mutex> lock(runtime_status_mutex);
-        std::cout << "\r\033[2K" << status.str() << std::flush;
-        runtime_status_active = true;
-    }
+    if (!renderRuntimeStatus(logger, status.str(), period_ms))
+        return;
 
     if (estimator.solver_flag == Estimator::SolverFlag::INITIAL)
         return;
@@ -163,6 +167,27 @@ void logStatistics(
     sum_of_path += (estimator.Ps[WINDOW_SIZE] - last_path).norm();
     last_path = estimator.Ps[WINDOW_SIZE];
     RCUTILS_LOG_DEBUG("sum of path %f", sum_of_path);
+}
+
+void logWaitingStatus(
+    const rclcpp::Logger &logger,
+    double current_stamp,
+    uint64_t imu_messages,
+    uint64_t feature_messages,
+    double last_imu_stamp,
+    double last_feature_stamp,
+    int period_ms)
+{
+    std::ostringstream status;
+    status << std::fixed << std::setprecision(3)
+           << "state=WAITING current_stamp=" << current_stamp
+           << " imu_messages=" << imu_messages
+           << " feature_messages=" << feature_messages;
+    if (last_imu_stamp > 0.0)
+        status << " last_imu_stamp=" << std::setprecision(9) << last_imu_stamp;
+    if (last_feature_stamp > 0.0)
+        status << " last_feature_stamp=" << std::setprecision(9) << last_feature_stamp;
+    renderRuntimeStatus(logger, status.str(), period_ms);
 }
 
 void finishRuntimeStatusLine()
