@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <algorithm>
+#include <glog/logging.h>
 #include <rclcpp/rclcpp.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/opencv.hpp>
@@ -442,6 +443,9 @@ int main(int argc, char **argv)
         rclcpp::shutdown();
         return 1;
     }
+    const int ceres_vlog_level = LOG_LEVEL == "DEBUG" ? 0 : -1;
+    FLAGS_v = ceres_vlog_level;
+    google::SetVLOGLevel("*", ceres_vlog_level);
     RCLCPP_INFO(n->get_logger(), "VINS-MONO ROS 2 version=%s release=%s",
                 VINS_MONO_VERSION, VINS_MONO_RELEASE_TAG);
     RCLCPP_INFO(n->get_logger(), "Logging configured: level=%s, period_ms=%d",
