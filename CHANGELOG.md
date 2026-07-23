@@ -16,6 +16,12 @@ two-digit zero-padded components after the major version.
 - Shortened periodic INFO field names and numeric precision so initialization
   and tracking telemetry fit on one terminal line.
 
+### Documentation
+
+- Added Ukrainian user and logging guides covering build, configuration,
+  startup, runtime states, initialization output, diagnostics, version
+  reporting, log levels, color output, and INFO throttling.
+
 ## [v1_00_01_04] - 2026-07-23
 
 ### Fixed

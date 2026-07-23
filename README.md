@@ -2,6 +2,12 @@
 ## ROS2 version of VINS-MONO
 **Current version: [v1_00_01_05](CHANGELOG.md#v1_00_01_05---2026-07-23)**
 
+## Документація українською
+
+- [Посібник користувача: встановлення, конфігурація, запуск і діагностика](docs/README_UK.md)
+- [Журналювання, рівні, період INFO та формати станів](docs/LOGGING_UK.md)
+- [Історія змін](CHANGELOG.md)
+
 **New: Code has been adapted for Ubuntu 24.04. See the ros2_jazzy branch for details.**
 # 1. Introduction
 This repository implements the ROS2 version of VINS-MONO, mainly including the following packages:
