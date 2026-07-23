@@ -102,6 +102,11 @@ class Estimator
     bool failure_occur;
     bool initialization_imu_excitation_insufficient;
     bool initialization_visual_motion_insufficient;
+    double initialization_imu_excitation;
+    double initialization_visual_parallax_px;
+    double initialization_metric_scale;
+    Vector3d initialization_gravity_before_alignment;
+    Vector3d initialization_alignment_ypr_deg;
 
     vector<Vector3d> point_cloud;
     vector<Vector3d> margin_cloud;

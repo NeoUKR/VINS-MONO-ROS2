@@ -1,6 +1,6 @@
 # Журналювання та діагностика estimator
 
-Документ відповідає функціоналу VINS-MONO-ROS2 `1.0.1.5`.
+Документ відповідає функціоналу VINS-MONO-ROS2 `1.0.1.7`.
 
 ## 1. Принцип роботи
 
@@ -134,13 +134,17 @@ state=TRACKING pos=[5.69 3.04 1.19] ypr=[8.94 32.20 165.92] vel=[7.35 4.21 -0.81
 
 - розміром заповненого вікна;
 - кількістю tracked features;
+- метричним масштабом, IMU excitation і visual parallax;
+- gravity до вирівнювання світової системи та початковою орієнтацією;
 - позицією та YPR;
 - швидкістю;
 - accelerometer і gyroscope bias;
 - вектором gravity;
-- time offset;
+- time offset і режимом його оцінювання;
+- агрегованою статистикою triangulated feature depths;
 - кількістю камер;
 - режимом extrinsic estimation;
+- джерелом extrinsic-параметрів;
 - extrinsic translation і orientation для кожної камери.
 
 ## 6. Кольори

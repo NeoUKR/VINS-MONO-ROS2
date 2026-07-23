@@ -6,6 +6,8 @@
 #include <condition_variable>
 #include <atomic>
 #include <algorithm>
+#include <cmath>
+#include <limits>
 #include <rclcpp/rclcpp.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/opencv.hpp>
@@ -68,9 +70,43 @@ void logStateTransition(
     {
         const Eigen::Vector3d ypr = Utility::R2ypr(estimator.Rs[WINDOW_SIZE]);
         const auto logger = estimator_node->get_logger();
+        int valid_depth_features = 0;
+        double minimum_depth = std::numeric_limits<double>::infinity();
+        double maximum_depth = 0.0;
+        double depth_sum = 0.0;
+        for (const auto &feature : estimator.f_manager.feature)
+        {
+            if (feature.estimated_depth > 0.0 && std::isfinite(feature.estimated_depth))
+            {
+                ++valid_depth_features;
+                depth_sum += feature.estimated_depth;
+                minimum_depth = std::min(minimum_depth, feature.estimated_depth);
+                maximum_depth = std::max(maximum_depth, feature.estimated_depth);
+            }
+        }
+        const double mean_depth =
+            valid_depth_features > 0 ? depth_sum / valid_depth_features : 0.0;
+        if (valid_depth_features == 0)
+            minimum_depth = 0.0;
+
+        const char *extrinsic_source =
+            ESTIMATE_EXTRINSIC == 0 ? "CONFIGURED_FIXED" : "ONLINE_ESTIMATED";
+
         RCLCPP_INFO(logger, "========== INITIALIZATION COMPLETED BEGIN ==========");
+        RCLCPP_INFO(logger, "initialization_stage=FINAL_NON_LINEAR");
         RCLCPP_INFO(logger, "window_frames=%d/%d", estimator.frame_count, WINDOW_SIZE);
         RCLCPP_INFO(logger, "tracked_features=%d", estimator.f_manager.last_track_num);
+        RCLCPP_INFO(logger, "metric_scale=%.9f", estimator.initialization_metric_scale);
+        RCLCPP_INFO(logger, "imu_excitation=%.9f", estimator.initialization_imu_excitation);
+        RCLCPP_INFO(logger, "visual_parallax_px=%.6f", estimator.initialization_visual_parallax_px);
+        RCLCPP_INFO(logger, "gravity_before_alignment_xyz=[%.6f %.6f %.6f]",
+            estimator.initialization_gravity_before_alignment.x(),
+            estimator.initialization_gravity_before_alignment.y(),
+            estimator.initialization_gravity_before_alignment.z());
+        RCLCPP_INFO(logger, "initial_alignment_ypr_deg=[%.6f %.6f %.6f]",
+            estimator.initialization_alignment_ypr_deg.x(),
+            estimator.initialization_alignment_ypr_deg.y(),
+            estimator.initialization_alignment_ypr_deg.z());
         RCLCPP_INFO(logger, "position_xyz=[%.6f %.6f %.6f]",
             estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z());
         RCLCPP_INFO(logger, "orientation_ypr_deg=[%.6f %.6f %.6f]",
@@ -84,8 +120,14 @@ void logStateTransition(
         RCLCPP_INFO(logger, "gravity_xyz=[%.6f %.6f %.6f]",
             estimator.g.x(), estimator.g.y(), estimator.g.z());
         RCLCPP_INFO(logger, "time_offset=%.9f", estimator.td);
+        RCLCPP_INFO(logger, "time_offset_estimation_mode=%d", ESTIMATE_TD);
+        RCLCPP_INFO(logger, "triangulated_features=%d", estimator.f_manager.getFeatureCount());
+        RCLCPP_INFO(logger, "valid_depth_features=%d", valid_depth_features);
+        RCLCPP_INFO(logger, "feature_depth_mean=%.6f", mean_depth);
+        RCLCPP_INFO(logger, "feature_depth_range=[%.6f %.6f]", minimum_depth, maximum_depth);
         RCLCPP_INFO(logger, "camera_count=%d", NUM_OF_CAM);
         RCLCPP_INFO(logger, "extrinsic_estimation_mode=%d", ESTIMATE_EXTRINSIC);
+        RCLCPP_INFO(logger, "extrinsic_source=%s", extrinsic_source);
 
         for (int i = 0; i < NUM_OF_CAM; ++i)
         {

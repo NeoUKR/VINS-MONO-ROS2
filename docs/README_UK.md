@@ -25,7 +25,7 @@ pre-integration, автоматичну ініціалізацію, виявле
 ## 2. Версія
 
 Версія продукту має формат `MAJOR.MINOR.FEATURE.PATCH`, наприклад
-`1.0.1.5`. Git-тег для цієї версії — `v1_00_01_05`.
+`1.0.1.7`. Git-тег для цієї версії — `v1_00_01_07`.
 
 Перевірити версію встановленого executable:
 
@@ -36,7 +36,7 @@ ros2 run vins_estimator vins_estimator --version
 Очікуваний результат:
 
 ```text
-VINS-MONO ROS 2 1.0.1.5 (v1_00_01_05)
+VINS-MONO ROS 2 1.0.1.7 (v1_00_01_07)
 ```
 
 ROS `package.xml` використовує стандартну трикомпонентну версію `1.0.1`,
@@ -216,8 +216,14 @@ state=TRACKING pos=[5.69 3.04 1.19] ypr=[8.94 32.20 165.92] vel=[7.35 4.21 -0.81
 
 ```text
 ========== INITIALIZATION COMPLETED BEGIN ==========
+initialization_stage=FINAL_NON_LINEAR
 window_frames=10/10
 tracked_features=...
+metric_scale=...
+imu_excitation=...
+visual_parallax_px=...
+gravity_before_alignment_xyz=[...]
+initial_alignment_ypr_deg=[...]
 position_xyz=[...]
 orientation_ypr_deg=[...]
 velocity_xyz=[...]
@@ -225,14 +231,22 @@ accelerometer_bias_xyz=[...]
 gyroscope_bias_xyz=[...]
 gravity_xyz=[...]
 time_offset=...
+time_offset_estimation_mode=...
+triangulated_features=...
+valid_depth_features=...
+feature_depth_mean=...
+feature_depth_range=[... ...]
 camera_count=...
 extrinsic_estimation_mode=...
+extrinsic_source=...
 camera[0].extrinsic_translation_xyz=[...]
 camera[0].extrinsic_orientation_ypr_deg=[...]
 ========== INITIALIZATION COMPLETED END ============
 ```
 
-Це повний оперативний знімок результату ініціалізації. Для кожної камери
+Це компактний фінальний знімок результату ініціалізації після першої
+нелінійної оптимізації. Він містить параметри руху та агреговану статистику
+глибин без переліку окремих landmarks або feature tracks. Для кожної камери
 виводяться окремі extrinsic-параметри.
 
 ## 9. Типові проблеми

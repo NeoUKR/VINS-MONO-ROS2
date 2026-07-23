@@ -6,6 +6,22 @@ The product version uses four numeric components: `MAJOR.MINOR.FEATURE.PATCH`.
 Git tags use the corresponding `vMAJOR_MINOR_FEATURE_PATCH` format, with
 two-digit zero-padded components after the major version.
 
+## [v1_00_01_07] - 2026-07-23
+
+### Added
+
+- The successful initialization report now includes compact motion-dependent
+  diagnostics: metric scale, IMU excitation, visual parallax, gravity before
+  world-frame alignment, and the initial alignment orientation.
+- Added time-offset estimation mode, extrinsic parameter source, and aggregate
+  triangulated-feature depth statistics without dumping individual landmarks
+  or feature tracks.
+
+### Fixed
+
+- Initialized the IMU excitation accumulator to zero before summing
+  preintegrated accelerations.
+
 ## [v1_00_01_05] - 2026-07-23
 
 ### Changed
@@ -101,6 +117,7 @@ Initial release of the VINS-MONO ROS 2 port.
 - RViz configurations and sample benchmark data.
 - Initial project documentation and GPLv3 licensing information.
 
+[v1_00_01_07]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_07
 [v1_00_01_05]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_05
 [v1_00_01_04]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_04
 [v1_00_01_03]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_03

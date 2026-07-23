@@ -60,6 +60,11 @@ void Estimator::clearState()
     frame_count = 0;
     solver_flag = INITIAL;
     initial_timestamp = 0;
+    initialization_imu_excitation = 0.0;
+    initialization_visual_parallax_px = 0.0;
+    initialization_metric_scale = 0.0;
+    initialization_gravity_before_alignment.setZero();
+    initialization_alignment_ypr_deg.setZero();
     all_image_frame.clear();
     td = TD;
 
@@ -228,7 +233,7 @@ bool Estimator::initialStructure()
     //check imu observibility
     {
         map<double, ImageFrame>::iterator frame_it;
-        Vector3d sum_g;
+        Vector3d sum_g = Vector3d::Zero();
         for (frame_it = all_image_frame.begin(), frame_it++; frame_it != all_image_frame.end(); frame_it++)
         {
             double dt = frame_it->second.pre_integration->sum_dt;
@@ -246,6 +251,7 @@ bool Estimator::initialStructure()
             //cout << "frame g " << tmp_g.transpose() << endl;
         }
         var = sqrt(var / ((int)all_image_frame.size() - 1));
+        initialization_imu_excitation = var;
         //ROS_WARN("IMU variation %f!", var);
         if(var < 0.25)
         {
@@ -404,6 +410,7 @@ bool Estimator::visualInitialAlign()
     f_manager.triangulate(Ps, &(TIC_TMP[0]), &(RIC[0]));
 
     double s = (x.tail<1>())(0);
+    initialization_metric_scale = s;
     for (int i = 0; i <= WINDOW_SIZE; i++)
     {
         pre_integrations[i]->repropagate(Vector3d::Zero(), Bgs[i]);
@@ -428,7 +435,9 @@ bool Estimator::visualInitialAlign()
         it_per_id.estimated_depth *= s;
     }
 
+    initialization_gravity_before_alignment = g;
     Matrix3d R0 = Utility::g2R(g);
+    initialization_alignment_ypr_deg = Utility::R2ypr(R0 * Rs[0]);
     double yaw = Utility::R2ypr(R0 * Rs[0]).x();
     R0 = Utility::ypr2R(Eigen::Vector3d{-yaw, 0, 0}) * R0;
     g = R0 * g;
@@ -468,6 +477,7 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
             average_parallax = 1.0 * sum_parallax / int(corres.size());
             if(average_parallax * 460 > 30 && m_estimator.solveRelativeRT(corres, relative_R, relative_T))
             {
+                initialization_visual_parallax_px = average_parallax * 460;
                 l = i;
                 RCUTILS_LOG_DEBUG("average_parallax %f choose l %d and newest frame to triangulate the whole structure", average_parallax * 460, l);
                 return true;
