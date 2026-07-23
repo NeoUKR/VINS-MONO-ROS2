@@ -16,7 +16,7 @@ two-digit zero-padded components after the major version.
 
 ### Changed
 
-- All ROS package manifests now report version `1.1.1`.
+- All ROS package manifests now report the ROS-compatible version `1.0.1`.
 - Product versioning now uses the four-component `1.0.1.1` format.
 
 ## [v1_00_01_00] - 2026-07-23
