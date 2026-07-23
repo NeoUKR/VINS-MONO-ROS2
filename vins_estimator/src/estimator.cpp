@@ -1,4 +1,5 @@
 #include "estimator.h"
+#include "utility/ceres_logging.h"
 #include <sstream>
 
 Estimator::Estimator(): f_manager{Rs}
@@ -822,7 +823,10 @@ void Estimator::optimization()
         options.max_solver_time_in_seconds = SOLVER_TIME;
     TicToc t_solver;
     ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem, &summary);
+    {
+        ScopedCeresLogSilencer ceres_log_silencer(options.logging_type == ceres::SILENT);
+        ceres::Solve(options, &problem, &summary);
+    }
     //cout << summary.BriefReport() << endl;
     RCUTILS_LOG_DEBUG("Iterations : %d", static_cast<int>(summary.iterations.size()));
     RCUTILS_LOG_DEBUG("solver costs: %f", t_solver.toc());

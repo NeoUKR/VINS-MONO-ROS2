@@ -1,4 +1,5 @@
 #include "initial_sfm.h"
+#include "../utility/ceres_logging.h"
 #include <rcutils/logging_macros.h>
 
 GlobalSFM::GlobalSFM(){}
@@ -278,7 +279,10 @@ bool GlobalSFM::construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 	//options.minimizer_progress_to_stdout = true;
 	options.max_solver_time_in_seconds = 0.2;
 	ceres::Solver::Summary summary;
-	ceres::Solve(options, &problem, &summary);
+	{
+		ScopedCeresLogSilencer ceres_log_silencer(options.logging_type == ceres::SILENT);
+		ceres::Solve(options, &problem, &summary);
+	}
 	//std::cout << summary.BriefReport() << "\n";
 	if (summary.termination_type == ceres::CONVERGENCE || summary.final_cost < 5e-03)
 	{
