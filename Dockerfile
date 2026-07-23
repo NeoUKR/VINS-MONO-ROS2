@@ -25,13 +25,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR ${VINS_WS}
 
-FROM dependencies AS build
+FROM dependencies AS development
 
-COPY . ${VINS_WS}
 COPY docker/entrypoint.sh /usr/local/bin/vins-entrypoint
-RUN chmod +x /usr/local/bin/vins-entrypoint \
-    && source /opt/ros/${ROS_DISTRO}/setup.bash \
-    && colcon build --merge-install --executor sequential
+RUN chmod +x /usr/local/bin/vins-entrypoint
 
 ENTRYPOINT ["/usr/local/bin/vins-entrypoint"]
 CMD ["shell"]
+
+FROM development AS build
+
+COPY . ${VINS_WS}
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
+    && colcon build --merge-install --executor sequential

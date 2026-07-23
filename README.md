@@ -51,6 +51,18 @@ For an interactive ROS 2 shell:
 docker compose run --rm vins shell
 ```
 
+To create and run the ARM64 development environment locally without compiling
+VINS, use the ARM64 Compose override:
+
+```powershell
+docker compose -f compose.yaml -f compose.arm64.yaml build
+docker compose -f compose.yaml -f compose.arm64.yaml run --rm vins uname -m
+```
+
+The expected architecture is `aarch64`. Docker Desktop uses ARM64 emulation on
+an x86-64 Windows host; the resulting image can later be transferred to a
+64-bit Raspberry Pi.
+
 The source directory is mounted into the container. Docker named volumes retain
 `build`, `install`, and `log`, so subsequent builds are incremental. To mount a
 dataset read-only at `/data`, set `VINS_DATA_DIR` before starting the container:
