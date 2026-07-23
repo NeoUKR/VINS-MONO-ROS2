@@ -1,5 +1,7 @@
 # VINS-MONO-ROS2
 ## ROS2 version of VINS-MONO
+**Current version: [v01_01_00](CHANGELOG.md#v01_01_00---2026-07-23)**
+
 **New: Code has been adapted for Ubuntu 24.04. See the ros2_jazzy branch for details.**
 # 1. Introduction
 This repository implements the ROS2 version of VINS-MONO, mainly including the following packages:
@@ -85,5 +87,8 @@ config_path = PathJoinSubstitution([
 # 6. Acknowledgements
 We use ros1 version of [VINS MONO](https://github.com/HKUST-Aerial-Robotics/VINS-Mono),  [ceres solver](http://ceres-solver.org/installation.html) for non-linear optimization, [DBoW2](https://github.com/dorian3d/DBoW2) for loop detection, and a generic [camera model](https://github.com/hengli/camodocal). Also, we referred to parts of the implementations from [VINS-FUSION-ROS2](https://github.com/zinuok/VINS-Fusion-ROS2) and [vins-mono-ros2](https://github.com/hitzzq/vins-mono-ros2).
 
-# 7. Licence
+# 7. Release history
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+
+# 8. Licence
 The source code is released under [GPLv3](https://www.gnu.org/licenses/) license.

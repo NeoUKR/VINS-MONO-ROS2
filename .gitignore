@@ -36,3 +36,4 @@ results/
 # System files
 .DS_Store
 Thumbs.db
+.ssh_known_hosts
