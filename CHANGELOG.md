@@ -2,9 +2,11 @@
 
 All notable changes to VINS-MONO-ROS2 are documented in this file.
 
-The project uses release identifiers in the `vMAJOR_MINOR_PATCH` format.
+The product version uses four numeric components: `MAJOR.MINOR.FEATURE.PATCH`.
+Git tags use the corresponding `vMAJOR_MINOR_FEATURE_PATCH` format, with
+two-digit zero-padded components after the major version.
 
-## [v01_01_01] - 2026-07-23
+## [v1_00_01_01] - 2026-07-23
 
 ### Added
 
@@ -15,8 +17,9 @@ The project uses release identifiers in the `vMAJOR_MINOR_PATCH` format.
 ### Changed
 
 - All ROS package manifests now report version `1.1.1`.
+- Product versioning now uses the four-component `1.0.1.1` format.
 
-## [v01_01_00] - 2026-07-23
+## [v1_00_01_00] - 2026-07-23
 
 ### Added
 
@@ -31,7 +34,7 @@ The project uses release identifiers in the `vMAJOR_MINOR_PATCH` format.
 - Feature tracking and RViz can now be launched separately.
 - Critical estimator conditions are reported at the `ERROR` level.
 
-## [v01_00_00] - 2026-07-23
+## [v1_00_00_00] - 2026-07-23
 
 Initial release of the VINS-MONO ROS 2 port.
 
@@ -43,6 +46,6 @@ Initial release of the VINS-MONO ROS 2 port.
 - RViz configurations and sample benchmark data.
 - Initial project documentation and GPLv3 licensing information.
 
-[v01_01_01]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v01_01_01
-[v01_01_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v01_01_00
-[v01_00_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v01_00_00
+[v1_00_01_01]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_01
+[v1_00_01_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_00
+[v1_00_00_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_00_00
