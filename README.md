@@ -32,6 +32,45 @@ This repository implements the ROS2 version of VINS-MONO, mainly including the f
   * [Ceres Solver](http://ceres-solver.org/installation.html) 1.14.0
   * Eigen 3.3.7
 # 3. Build VINS-MONO-ROS2
+
+## Docker (Windows 11, Linux, macOS)
+
+Docker provides the supported Ubuntu 24.04 and ROS 2 Jazzy environment on any
+host operating system. On Windows 11, install Docker Desktop and enable the WSL
+2 backend, then run these commands from PowerShell in the repository directory:
+
+```powershell
+docker compose build
+docker compose run --rm vins test
+docker compose run --rm vins version
+```
+
+For an interactive ROS 2 shell:
+
+```powershell
+docker compose run --rm vins shell
+```
+
+The source directory is mounted into the container. Docker named volumes retain
+`build`, `install`, and `log`, so subsequent builds are incremental. To mount a
+dataset read-only at `/data`, set `VINS_DATA_DIR` before starting the container:
+
+```powershell
+$env:VINS_DATA_DIR = "D:\datasets\EuRoC"
+docker compose run --rm vins shell
+```
+
+Inside the container, a typical dataset run is:
+
+```bash
+ros2 launch feature_tracker vins_feature_tracker.launch.py
+ros2 launch vins_estimator euroc.launch.py
+ros2 bag play /data/MH_01_easy
+```
+
+RViz and direct camera/USB access require host-specific forwarding. The default
+Docker workflow intentionally targets reproducible headless builds and tests.
+
 Clone the repository and colcon build:  
 ```
 cd $(PATH_TO_YOUR_ROS2_WS)/src

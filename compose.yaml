@@ -1,0 +1,26 @@
+name: vins-mono-ros2
+
+services:
+  vins:
+    build:
+      context: .
+      args:
+        ROS_DISTRO: jazzy
+    image: vins-mono-ros2:jazzy
+    environment:
+      DISPLAY: ${DISPLAY:-}
+      QT_X11_NO_MITSHM: "1"
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/workspace
+      - vins-build:/workspace/build
+      - vins-install:/workspace/install
+      - vins-log:/workspace/log
+      - ${VINS_DATA_DIR:-./data}:/data:ro
+
+volumes:
+  vins-build:
+  vins-install:
+  vins-log:
