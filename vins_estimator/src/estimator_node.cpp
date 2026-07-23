@@ -55,49 +55,49 @@ const char *stateName(Estimator::SolverFlag state)
 
 void logStateTransition(
     Estimator::SolverFlag previous,
-    Estimator::SolverFlag current,
-    const std_msgs::msg::Header &header)
+    Estimator::SolverFlag current)
 {
     if (!estimator_node || previous == current)
         return;
 
     finishRuntimeStatusLine();
-    const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
-    RCLCPP_INFO(estimator_node->get_logger(), "[STATE END] %s stamp=%.9f",
-                stateName(previous), stamp);
-    RCLCPP_INFO(estimator_node->get_logger(), "[STATE BEGIN] %s stamp=%.9f",
-                stateName(current), stamp);
+    RCLCPP_INFO(estimator_node->get_logger(), "[STATE END] %s", stateName(previous));
+    RCLCPP_INFO(estimator_node->get_logger(), "[STATE BEGIN] %s", stateName(current));
 
     if (current == Estimator::SolverFlag::NON_LINEAR)
     {
         const Eigen::Vector3d ypr = Utility::R2ypr(estimator.Rs[WINDOW_SIZE]);
-        RCLCPP_INFO(
-            estimator_node->get_logger(),
-            "Initialization completed: stamp=%.9f frames=%d features=%d "
-            "position=[%.6f %.6f %.6f] orientation_ypr_deg=[%.6f %.6f %.6f] "
-            "velocity=[%.6f %.6f %.6f] accel_bias=[%.6f %.6f %.6f] "
-            "gyro_bias=[%.6f %.6f %.6f] gravity=[%.6f %.6f %.6f] "
-            "time_offset=%.9f cameras=%d extrinsic_mode=%d",
-            stamp, estimator.frame_count, estimator.f_manager.last_track_num,
-            estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z(),
-            ypr.x(), ypr.y(), ypr.z(),
-            estimator.Vs[WINDOW_SIZE].x(), estimator.Vs[WINDOW_SIZE].y(), estimator.Vs[WINDOW_SIZE].z(),
-            estimator.Bas[WINDOW_SIZE].x(), estimator.Bas[WINDOW_SIZE].y(), estimator.Bas[WINDOW_SIZE].z(),
-            estimator.Bgs[WINDOW_SIZE].x(), estimator.Bgs[WINDOW_SIZE].y(), estimator.Bgs[WINDOW_SIZE].z(),
-            estimator.g.x(), estimator.g.y(), estimator.g.z(),
-            estimator.td, NUM_OF_CAM, ESTIMATE_EXTRINSIC);
+        const auto logger = estimator_node->get_logger();
+        RCLCPP_INFO(logger, "========== INITIALIZATION COMPLETED BEGIN ==========");
+        RCLCPP_INFO(logger, "window_frames=%d/%d", estimator.frame_count, WINDOW_SIZE);
+        RCLCPP_INFO(logger, "tracked_features=%d", estimator.f_manager.last_track_num);
+        RCLCPP_INFO(logger, "position_xyz=[%.6f %.6f %.6f]",
+            estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z());
+        RCLCPP_INFO(logger, "orientation_ypr_deg=[%.6f %.6f %.6f]",
+            ypr.x(), ypr.y(), ypr.z());
+        RCLCPP_INFO(logger, "velocity_xyz=[%.6f %.6f %.6f]",
+            estimator.Vs[WINDOW_SIZE].x(), estimator.Vs[WINDOW_SIZE].y(), estimator.Vs[WINDOW_SIZE].z());
+        RCLCPP_INFO(logger, "accelerometer_bias_xyz=[%.6f %.6f %.6f]",
+            estimator.Bas[WINDOW_SIZE].x(), estimator.Bas[WINDOW_SIZE].y(), estimator.Bas[WINDOW_SIZE].z());
+        RCLCPP_INFO(logger, "gyroscope_bias_xyz=[%.6f %.6f %.6f]",
+            estimator.Bgs[WINDOW_SIZE].x(), estimator.Bgs[WINDOW_SIZE].y(), estimator.Bgs[WINDOW_SIZE].z());
+        RCLCPP_INFO(logger, "gravity_xyz=[%.6f %.6f %.6f]",
+            estimator.g.x(), estimator.g.y(), estimator.g.z());
+        RCLCPP_INFO(logger, "time_offset=%.9f", estimator.td);
+        RCLCPP_INFO(logger, "camera_count=%d", NUM_OF_CAM);
+        RCLCPP_INFO(logger, "extrinsic_estimation_mode=%d", ESTIMATE_EXTRINSIC);
 
         for (int i = 0; i < NUM_OF_CAM; ++i)
         {
             const Eigen::Vector3d extrinsic_ypr = Utility::R2ypr(estimator.ric[i]);
-            RCLCPP_INFO(
-                estimator_node->get_logger(),
-                "Initialization camera=%d extrinsic_translation=[%.6f %.6f %.6f] "
-                "extrinsic_orientation_ypr_deg=[%.6f %.6f %.6f]",
+            RCLCPP_INFO(logger, "camera[%d].extrinsic_translation_xyz=[%.6f %.6f %.6f]",
                 i,
-                estimator.tic[i].x(), estimator.tic[i].y(), estimator.tic[i].z(),
+                estimator.tic[i].x(), estimator.tic[i].y(), estimator.tic[i].z());
+            RCLCPP_INFO(logger, "camera[%d].extrinsic_orientation_ypr_deg=[%.6f %.6f %.6f]",
+                i,
                 extrinsic_ypr.x(), extrinsic_ypr.y(), extrinsic_ypr.z());
         }
+        RCLCPP_INFO(logger, "========== INITIALIZATION COMPLETED END ============");
     }
 }
 
@@ -268,9 +268,7 @@ void restart_callback(const std_msgs::msg::Bool::SharedPtr restart_msg)
         current_time = -1;
         last_imu_t = 0;
         sensor_processing_started.store(false, std::memory_order_relaxed);
-        std_msgs::msg::Header header;
-        header.stamp = estimator_node->get_clock()->now();
-        logStateTransition(previous_state, estimator.solver_flag, header);
+        logStateTransition(previous_state, estimator.solver_flag);
     }
     return;
 }
@@ -393,11 +391,11 @@ void process()
             }
             const Estimator::SolverFlag previous_state = estimator.solver_flag;
             estimator.processImage(image, img_msg->header);
-            logStateTransition(previous_state, estimator.solver_flag, img_msg->header);
+            logStateTransition(previous_state, estimator.solver_flag);
 
             double whole_t = t_s.toc();
             logStatistics(
-                estimator, whole_t, img_msg->header,
+                estimator, whole_t,
                 estimator_node->get_logger(), LOG_PERIOD_MS);
             std_msgs::msg::Header header = img_msg->header;
             header.frame_id = "world";
@@ -451,8 +449,7 @@ int main(int argc, char **argv)
 #ifdef EIGEN_DONT_PARALLELIZE
     RCUTILS_LOG_DEBUG("EIGEN_DONT_PARALLELIZE");
 #endif
-    RCLCPP_INFO(n->get_logger(), "[STATE BEGIN] INITIALIZING stamp=%.9f",
-                n->get_clock()->now().seconds());
+    RCLCPP_INFO(n->get_logger(), "[STATE BEGIN] INITIALIZING");
     auto waiting_status_timer = n->create_wall_timer(
         std::chrono::milliseconds(std::max(1, LOG_PERIOD_MS)),
         [n]()
@@ -461,11 +458,8 @@ int main(int argc, char **argv)
                 return;
             logWaitingStatus(
                 n->get_logger(),
-                n->get_clock()->now().seconds(),
                 imu_messages_received.load(std::memory_order_relaxed),
                 feature_messages_received.load(std::memory_order_relaxed),
-                last_imu_stamp_received.load(std::memory_order_relaxed),
-                last_feature_stamp_received.load(std::memory_order_relaxed),
                 LOG_PERIOD_MS);
         });
 
@@ -475,6 +469,12 @@ int main(int argc, char **argv)
     auto sub_image = n->create_subscription<sensor_msgs::msg::PointCloud>("/feature_tracker/feature", rclcpp::QoS(rclcpp::KeepLast(2000)), feature_callback);
     auto sub_restart = n->create_subscription<std_msgs::msg::Bool>("/feature_tracker/restart", rclcpp::QoS(rclcpp::KeepLast(2000)), restart_callback);
     auto sub_relo_points = n->create_subscription<sensor_msgs::msg::PointCloud>("/pose_graph/match_points", rclcpp::QoS(rclcpp::KeepLast(2000)), relocalization_callback);
+
+    logWaitingStatus(
+        n->get_logger(),
+        imu_messages_received.load(std::memory_order_relaxed),
+        feature_messages_received.load(std::memory_order_relaxed),
+        0);
 
     std::thread measurement_process{process};
     rclcpp::spin(n);

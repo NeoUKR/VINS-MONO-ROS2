@@ -6,6 +6,30 @@ The product version uses four numeric components: `MAJOR.MINOR.FEATURE.PATCH`.
 Git tags use the corresponding `vMAJOR_MINOR_FEATURE_PATCH` format, with
 two-digit zero-padded components after the major version.
 
+## [v1_00_01_05] - 2026-07-23
+
+### Changed
+
+- Removed sensor timestamps from periodic status, state transitions, waiting
+  output, and the successful initialization report. The ROS log prefix remains
+  the single displayed time source.
+- Shortened periodic INFO field names and numeric precision so initialization
+  and tracking telemetry fit on one terminal line.
+
+## [v1_00_01_04] - 2026-07-23
+
+### Fixed
+
+- Waiting output is emitted immediately and periodically reports whether IMU
+  and camera feature data are missing or being received.
+- Periodic initialization and tracking telemetry is sent through the ROS INFO
+  logger so it is displayed immediately by `ros2 launch`.
+- Current tracking position, orientation, velocity, feature count, time offset,
+  and processing time are visible at every configured reporting interval.
+- Successful initialization is printed as a complete multi-line block,
+  including pose, velocity, biases, gravity, timing, camera count, extrinsic
+  mode, and per-camera extrinsic parameters.
+
 ## [v1_00_01_03] - 2026-07-23
 
 ### Added
@@ -71,6 +95,8 @@ Initial release of the VINS-MONO ROS 2 port.
 - RViz configurations and sample benchmark data.
 - Initial project documentation and GPLv3 licensing information.
 
+[v1_00_01_05]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_05
+[v1_00_01_04]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_04
 [v1_00_01_03]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_03
 [v1_00_01_02]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_02
 [v1_00_01_01]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_01

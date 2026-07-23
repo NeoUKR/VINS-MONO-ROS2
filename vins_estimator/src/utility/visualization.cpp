@@ -1,7 +1,6 @@
 #include "visualization.h"
 #include <chrono>
 #include <iomanip>
-#include <iostream>
 #include <mutex>
 #include <sstream>
 #include <rcutils/logging.h>
@@ -29,7 +28,7 @@ CameraPoseVisualization keyframebasevisual(0.0, 0.0, 1.0, 1.0);
 static double sum_of_path = 0;
 static Vector3d last_path(0.0, 0.0, 0.0);
 static std::mutex runtime_status_mutex;
-static bool runtime_status_active = false;
+static bool runtime_status_initialized = false;
 static std::chrono::steady_clock::time_point last_runtime_status_time;
 
 static std::shared_ptr<tf2_ros::TransformBroadcaster> br;
@@ -45,14 +44,14 @@ static bool renderRuntimeStatus(
 
     const auto now = std::chrono::steady_clock::now();
     std::lock_guard<std::mutex> lock(runtime_status_mutex);
-    if (runtime_status_active && period_ms > 0 &&
+    if (runtime_status_initialized && period_ms > 0 &&
         std::chrono::duration_cast<std::chrono::milliseconds>(
             now - last_runtime_status_time).count() < period_ms)
         return false;
 
     last_runtime_status_time = now;
-    std::cout << "\r\033[2K" << status << std::flush;
-    runtime_status_active = true;
+    runtime_status_initialized = true;
+    RCLCPP_INFO(logger, "%s", status.c_str());
     return true;
 }
 
@@ -103,39 +102,36 @@ void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, co
 void logStatistics(
     const Estimator &estimator,
     double processing_time_ms,
-    const std_msgs::msg::Header &header,
     const rclcpp::Logger &logger,
     int period_ms)
 {
-    const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
     std::ostringstream status;
     status << std::fixed;
     if (estimator.solver_flag == Estimator::SolverFlag::INITIAL)
     {
-        status << "state=INITIALIZING stamp=" << std::setprecision(9) << stamp
-               << " window_frames=" << estimator.frame_count << "/" << WINDOW_SIZE
-               << " tracked_features=" << estimator.f_manager.last_track_num
-               << " processing_ms=" << std::setprecision(3) << processing_time_ms;
+        status << "state=INITIALIZING"
+               << " frames=" << estimator.frame_count << "/" << WINDOW_SIZE
+               << " feat=" << estimator.f_manager.last_track_num
+               << " ms=" << std::setprecision(1) << processing_time_ms;
         if (estimator.initialization_imu_excitation_insufficient)
-            status << " imu_excitation=INSUFFICIENT";
+            status << " imu=LOW_EXCITATION";
         if (estimator.initialization_visual_motion_insufficient)
-            status << " visual_motion=INSUFFICIENT";
+            status << " vision=LOW_MOTION";
     }
     else
     {
         const Eigen::Vector3d ypr = Utility::R2ypr(estimator.Rs[WINDOW_SIZE]);
-        status << "state=TRACKING stamp=" << std::setprecision(9) << stamp
-               << std::setprecision(3)
-               << " position=[" << estimator.Ps[WINDOW_SIZE].x() << " "
+        status << "state=TRACKING" << std::setprecision(2)
+               << " pos=[" << estimator.Ps[WINDOW_SIZE].x() << " "
                << estimator.Ps[WINDOW_SIZE].y() << " "
                << estimator.Ps[WINDOW_SIZE].z() << "]"
-               << " orientation_ypr_deg=[" << ypr.x() << " " << ypr.y() << " " << ypr.z() << "]"
-               << " velocity=[" << estimator.Vs[WINDOW_SIZE].x() << " "
+               << " ypr=[" << ypr.x() << " " << ypr.y() << " " << ypr.z() << "]"
+               << " vel=[" << estimator.Vs[WINDOW_SIZE].x() << " "
                << estimator.Vs[WINDOW_SIZE].y() << " "
                << estimator.Vs[WINDOW_SIZE].z() << "]"
-               << " features=" << estimator.f_manager.last_track_num
-               << " time_offset=" << std::setprecision(6) << estimator.td
-               << " processing_ms=" << std::setprecision(3) << processing_time_ms;
+               << " feat=" << estimator.f_manager.last_track_num
+               << " td=" << std::setprecision(4) << estimator.td
+               << " ms=" << std::setprecision(1) << processing_time_ms;
     }
 
     if (!renderRuntimeStatus(logger, status.str(), period_ms))
@@ -171,32 +167,23 @@ void logStatistics(
 
 void logWaitingStatus(
     const rclcpp::Logger &logger,
-    double current_stamp,
     uint64_t imu_messages,
     uint64_t feature_messages,
-    double last_imu_stamp,
-    double last_feature_stamp,
     int period_ms)
 {
     std::ostringstream status;
-    status << std::fixed << std::setprecision(3)
-           << "state=WAITING current_stamp=" << current_stamp
+    status << "state=WAITING"
+           << " imu_status=" << (imu_messages == 0 ? "MISSING" : "RECEIVING")
            << " imu_messages=" << imu_messages
-           << " feature_messages=" << feature_messages;
-    if (last_imu_stamp > 0.0)
-        status << " last_imu_stamp=" << std::setprecision(9) << last_imu_stamp;
-    if (last_feature_stamp > 0.0)
-        status << " last_feature_stamp=" << std::setprecision(9) << last_feature_stamp;
+           << " camera_status=" << (feature_messages == 0 ? "MISSING" : "RECEIVING")
+           << " camera_feature_messages=" << feature_messages;
     renderRuntimeStatus(logger, status.str(), period_ms);
 }
 
 void finishRuntimeStatusLine()
 {
-    std::lock_guard<std::mutex> lock(runtime_status_mutex);
-    if (!runtime_status_active)
-        return;
-    std::cout << std::endl;
-    runtime_status_active = false;
+    // Runtime status uses the ROS logger, so every update is already a
+    // complete line and does not require terminal-line finalization.
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::msg::Header &header)
