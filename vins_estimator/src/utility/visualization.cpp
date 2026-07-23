@@ -70,28 +70,45 @@ void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, co
     pub_latest_odometry->publish(odometry);
 }
 
-void printStatistics(const Estimator &estimator, double t)
+void logStatistics(
+    const Estimator &estimator,
+    double processing_time_ms,
+    const std_msgs::msg::Header &header,
+    const rclcpp::Logger &logger,
+    const rclcpp::Clock::SharedPtr &clock,
+    int period_ms)
 {
-    if (estimator.solver_flag != Estimator::SolverFlag::NON_LINEAR)
-        return;
-    printf("position: %f, %f, %f\r", estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z());
-    std::cout << "position: " << estimator.Ps[WINDOW_SIZE].transpose() << std::endl;
-    std::cout << "orientation: " << estimator.Vs[WINDOW_SIZE].transpose() << std::endl;
-    for (int i = 0; i < NUM_OF_CAM; i++)
+    const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
+    if (estimator.solver_flag == Estimator::SolverFlag::INITIAL)
     {
-        //ROS_DEBUG("calibration result for camera %d", i);
-        std::cout << "extirnsic tic: " << estimator.tic[i].transpose() << std::endl;
-        std::cout << "extrinsic ric: " << Utility::R2ypr(estimator.ric[i]).transpose() << std::endl;
-        if (ESTIMATE_EXTRINSIC)
+        RCLCPP_INFO_THROTTLE(
+            logger, *clock, period_ms,
+            "state=INITIALIZING stamp=%.9f window_frames=%d/%d tracked_features=%d processing_ms=%.3f",
+            stamp, estimator.frame_count, WINDOW_SIZE,
+            estimator.f_manager.last_track_num, processing_time_ms);
+        return;
+    }
+
+    const Eigen::Vector3d ypr = Utility::R2ypr(estimator.Rs[WINDOW_SIZE]);
+    RCLCPP_INFO_THROTTLE(
+        logger, *clock, period_ms,
+        "state=TRACKING stamp=%.9f position=[%.3f %.3f %.3f] "
+        "orientation_ypr_deg=[%.3f %.3f %.3f] velocity=[%.3f %.3f %.3f] "
+        "features=%d time_offset=%.6f processing_ms=%.3f",
+        stamp,
+        estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z(),
+        ypr.x(), ypr.y(), ypr.z(),
+        estimator.Vs[WINDOW_SIZE].x(), estimator.Vs[WINDOW_SIZE].y(), estimator.Vs[WINDOW_SIZE].z(),
+        estimator.f_manager.last_track_num, estimator.td, processing_time_ms);
+
+    if (ESTIMATE_EXTRINSIC)
+    {
+        for (int i = 0; i < NUM_OF_CAM; i++)
         {
             cv::FileStorage fs(EX_CALIB_RESULT_PATH, cv::FileStorage::WRITE);
-            Eigen::Matrix3d eigen_R;
-            Eigen::Vector3d eigen_T;
-            eigen_R = estimator.ric[i];
-            eigen_T = estimator.tic[i];
             cv::Mat cv_R, cv_T;
-            cv::eigen2cv(eigen_R, cv_R);
-            cv::eigen2cv(eigen_T, cv_T);
+            cv::eigen2cv(estimator.ric[i], cv_R);
+            cv::eigen2cv(estimator.tic[i], cv_T);
             fs << "extrinsicRotation" << cv_R << "extrinsicTranslation" << cv_T;
             fs.release();
         }
@@ -99,16 +116,14 @@ void printStatistics(const Estimator &estimator, double t)
 
     static double sum_of_time = 0;
     static int sum_of_calculation = 0;
-    sum_of_time += t;
+    sum_of_time += processing_time_ms;
     sum_of_calculation++;
-    RCUTILS_LOG_DEBUG("vo solver costs: %f ms", t);
+    RCUTILS_LOG_DEBUG("vo solver costs: %f ms", processing_time_ms);
     RCUTILS_LOG_DEBUG("average of time %f ms", sum_of_time / sum_of_calculation);
 
     sum_of_path += (estimator.Ps[WINDOW_SIZE] - last_path).norm();
     last_path = estimator.Ps[WINDOW_SIZE];
     RCUTILS_LOG_DEBUG("sum of path %f", sum_of_path);
-    if (ESTIMATE_TD)
-        RCUTILS_LOG_INFO("td %f", estimator.td);
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::msg::Header &header)

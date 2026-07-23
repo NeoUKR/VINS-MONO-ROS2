@@ -1,8 +1,8 @@
 #include "estimator.h"
+#include <sstream>
 
 Estimator::Estimator(): f_manager{Rs}
 {
-    RCUTILS_LOG_INFO("init begins");
     clearState();
 }
 
@@ -146,8 +146,9 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
             Matrix3d calib_ric;
             if (initial_ex_rotation.CalibrationExRotation(corres, pre_integrations[frame_count]->delta_q, calib_ric))
             {
-                RCUTILS_LOG_WARN("initial extrinsic rotation calib success");
-                cout << "initial extrinsic rotation: " << endl << calib_ric;
+                std::ostringstream calibration_message;
+                calibration_message << "Initial extrinsic rotation calibration succeeded:\n" << calib_ric;
+                RCUTILS_LOG_INFO("%s", calibration_message.str().c_str());
                 ric[0] = calib_ric;
                 RIC[0] = calib_ric;
                 ESTIMATE_EXTRINSIC = 1;
@@ -171,7 +172,6 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 solveOdometry();
                 slideWindow();
                 f_manager.removeFailures();
-                RCUTILS_LOG_INFO("Initialization finish!");
                 last_R = Rs[WINDOW_SIZE];
                 last_P = Ps[WINDOW_SIZE];
                 last_R0 = Rs[0];
@@ -193,11 +193,11 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
 
         if (failureDetection())
         {
-            RCUTILS_LOG_WARN("failure detection!");
+            RCUTILS_LOG_ERROR("Estimator failure detected.");
             failure_occur = 1;
             clearState();
             setParameter();
-            RCUTILS_LOG_WARN("system reboot!");
+            RCUTILS_LOG_WARN("Estimator state was reset after failure.");
             return;
         }
 
@@ -629,12 +629,12 @@ bool Estimator::failureDetection()
     }
     if (Bas[WINDOW_SIZE].norm() > 2.5)
     {
-        RCUTILS_LOG_INFO(" big IMU acc bias estimation %f", Bas[WINDOW_SIZE].norm());
+        RCUTILS_LOG_ERROR("Critical accelerometer bias estimate: %.6f", Bas[WINDOW_SIZE].norm());
         return true;
     }
     if (Bgs[WINDOW_SIZE].norm() > 1.0)
     {
-        RCUTILS_LOG_INFO(" big IMU gyr bias estimation %f", Bgs[WINDOW_SIZE].norm());
+        RCUTILS_LOG_ERROR("Critical gyroscope bias estimate: %.6f", Bgs[WINDOW_SIZE].norm());
         return true;
     }
     /*
@@ -647,12 +647,12 @@ bool Estimator::failureDetection()
     Vector3d tmp_P = Ps[WINDOW_SIZE];
     if ((tmp_P - last_P).norm() > 5)
     {
-        RCUTILS_LOG_INFO(" big translation");
+        RCUTILS_LOG_ERROR("Critical translation jump: %.6f m", (tmp_P - last_P).norm());
         return true;
     }
     if (abs(tmp_P.z() - last_P.z()) > 1)
     {
-        RCUTILS_LOG_INFO(" big z translation");
+        RCUTILS_LOG_ERROR("Critical vertical translation jump: %.6f m", abs(tmp_P.z() - last_P.z()));
         return true; 
     }
     Matrix3d tmp_R = Rs[WINDOW_SIZE];
@@ -808,6 +808,7 @@ void Estimator::optimization()
     //options.num_threads = 2;
     options.trust_region_strategy_type = ceres::DOGLEG;
     options.max_num_iterations = NUM_ITERATIONS;
+    options.logging_type = (LOG_LEVEL == "DEBUG") ? ceres::PER_MINIMIZER_ITERATION : ceres::SILENT;
     //options.use_explicit_schur_complement = true;
     //options.minimizer_progress_to_stdout = true;
     //options.use_nonmonotonic_steps = true;

@@ -38,9 +38,12 @@ extern double TR;
 extern int ESTIMATE_TD;
 extern int ROLLING_SHUTTER;
 extern double ROW, COL;
+extern std::string LOG_LEVEL;
+extern int LOG_PERIOD_MS;
 
 
 void readParameters(rclcpp::Node::SharedPtr n);
+bool configureLogging(const rclcpp::Node::SharedPtr &n);
 
 enum SIZE_PARAMETERIZATION
 {

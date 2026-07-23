@@ -36,7 +36,13 @@ void registerPub(rclcpp::Node::SharedPtr n);
 
 void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, const std_msgs::msg::Header &header);
 
-void printStatistics(const Estimator &estimator, double t);
+void logStatistics(
+    const Estimator &estimator,
+    double processing_time_ms,
+    const std_msgs::msg::Header &header,
+    const rclcpp::Logger &logger,
+    const rclcpp::Clock::SharedPtr &clock,
+    int period_ms);
 
 void pubOdometry(const Estimator &estimator, const std_msgs::msg::Header &header);
 

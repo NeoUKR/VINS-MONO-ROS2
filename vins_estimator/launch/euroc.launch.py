@@ -33,7 +33,9 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'config_file': config_path,
-            'vins_folder': vins_path
+            'vins_folder': vins_path,
+            'logging.level': 'INFO',
+            'logging.period_ms': 2000
         }]
     )
 

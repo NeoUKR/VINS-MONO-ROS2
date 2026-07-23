@@ -14,6 +14,7 @@
 
 
 Estimator estimator;
+rclcpp::Node::SharedPtr estimator_node;
 
 std::condition_variable con;
 double current_time = -1;
@@ -38,6 +39,58 @@ Eigen::Vector3d gyr_0;
 bool init_feature = 0;
 bool init_imu = 1;
 double last_imu_t = 0;
+
+const char *stateName(Estimator::SolverFlag state)
+{
+    return state == Estimator::SolverFlag::INITIAL ? "INITIALIZING" : "TRACKING";
+}
+
+void logStateTransition(
+    Estimator::SolverFlag previous,
+    Estimator::SolverFlag current,
+    const std_msgs::msg::Header &header)
+{
+    if (!estimator_node || previous == current)
+        return;
+
+    const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
+    RCLCPP_INFO(estimator_node->get_logger(), "[STATE END] %s stamp=%.9f",
+                stateName(previous), stamp);
+    RCLCPP_INFO(estimator_node->get_logger(), "[STATE BEGIN] %s stamp=%.9f",
+                stateName(current), stamp);
+
+    if (current == Estimator::SolverFlag::NON_LINEAR)
+    {
+        const Eigen::Vector3d ypr = Utility::R2ypr(estimator.Rs[WINDOW_SIZE]);
+        RCLCPP_INFO(
+            estimator_node->get_logger(),
+            "Initialization completed: stamp=%.9f frames=%d features=%d "
+            "position=[%.6f %.6f %.6f] orientation_ypr_deg=[%.6f %.6f %.6f] "
+            "velocity=[%.6f %.6f %.6f] accel_bias=[%.6f %.6f %.6f] "
+            "gyro_bias=[%.6f %.6f %.6f] gravity=[%.6f %.6f %.6f] "
+            "time_offset=%.9f cameras=%d extrinsic_mode=%d",
+            stamp, estimator.frame_count, estimator.f_manager.last_track_num,
+            estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z(),
+            ypr.x(), ypr.y(), ypr.z(),
+            estimator.Vs[WINDOW_SIZE].x(), estimator.Vs[WINDOW_SIZE].y(), estimator.Vs[WINDOW_SIZE].z(),
+            estimator.Bas[WINDOW_SIZE].x(), estimator.Bas[WINDOW_SIZE].y(), estimator.Bas[WINDOW_SIZE].z(),
+            estimator.Bgs[WINDOW_SIZE].x(), estimator.Bgs[WINDOW_SIZE].y(), estimator.Bgs[WINDOW_SIZE].z(),
+            estimator.g.x(), estimator.g.y(), estimator.g.z(),
+            estimator.td, NUM_OF_CAM, ESTIMATE_EXTRINSIC);
+
+        for (int i = 0; i < NUM_OF_CAM; ++i)
+        {
+            const Eigen::Vector3d extrinsic_ypr = Utility::R2ypr(estimator.ric[i]);
+            RCLCPP_INFO(
+                estimator_node->get_logger(),
+                "Initialization camera=%d extrinsic_translation=[%.6f %.6f %.6f] "
+                "extrinsic_orientation_ypr_deg=[%.6f %.6f %.6f]",
+                i,
+                estimator.tic[i].x(), estimator.tic[i].y(), estimator.tic[i].z(),
+                extrinsic_ypr.x(), extrinsic_ypr.y(), extrinsic_ypr.z());
+        }
+    }
+}
 
 void predict(const sensor_msgs::msg::Imu::SharedPtr imu_msg)
 {
@@ -182,7 +235,8 @@ void restart_callback(const std_msgs::msg::Bool::SharedPtr restart_msg)
 {
     if (restart_msg->data == true)
     {
-        RCUTILS_LOG_WARN("restart the estimator!");
+        RCLCPP_WARN(estimator_node->get_logger(), "Estimator restart requested.");
+        const Estimator::SolverFlag previous_state = estimator.solver_flag;
         m_buf.lock();
         while(!feature_buf.empty())
             feature_buf.pop();
@@ -195,6 +249,9 @@ void restart_callback(const std_msgs::msg::Bool::SharedPtr restart_msg)
         m_estimator.unlock();
         current_time = -1;
         last_imu_t = 0;
+        std_msgs::msg::Header header;
+        header.stamp = estimator_node->get_clock()->now();
+        logStateTransition(previous_state, estimator.solver_flag, header);
     }
     return;
 }
@@ -314,10 +371,14 @@ void process()
                 xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
                 image[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
             }
+            const Estimator::SolverFlag previous_state = estimator.solver_flag;
             estimator.processImage(image, img_msg->header);
+            logStateTransition(previous_state, estimator.solver_flag, img_msg->header);
 
             double whole_t = t_s.toc();
-            printStatistics(estimator, whole_t);
+            logStatistics(
+                estimator, whole_t, img_msg->header,
+                estimator_node->get_logger(), estimator_node->get_clock(), LOG_PERIOD_MS);
             std_msgs::msg::Header header = img_msg->header;
             header.frame_id = "world";
 
@@ -345,12 +406,20 @@ int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
     auto n = rclcpp::Node::make_shared("vins_estimator");
+    estimator_node = n;
+    if (!configureLogging(n))
+    {
+        rclcpp::shutdown();
+        return 1;
+    }
     readParameters(n);
     estimator.setParameter();
 #ifdef EIGEN_DONT_PARALLELIZE
     RCUTILS_LOG_DEBUG("EIGEN_DONT_PARALLELIZE");
 #endif
-    RCUTILS_LOG_WARN("waiting for image and imu...");
+    RCLCPP_INFO(n->get_logger(), "[STATE BEGIN] INITIALIZING stamp=%.9f",
+                n->get_clock()->now().seconds());
+    RCLCPP_INFO(n->get_logger(), "Waiting for image and IMU data.");
 
     registerPub(n);
 

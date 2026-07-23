@@ -1,4 +1,7 @@
 #include "parameters.h"
+#include <algorithm>
+#include <cctype>
+#include <rcutils/logging.h>
 
 double INIT_DEPTH;
 double MIN_PARALLAX;
@@ -22,6 +25,53 @@ std::string VINS_RESULT_PATH;
 std::string IMU_TOPIC;
 double ROW, COL;
 double TD, TR;
+std::string LOG_LEVEL = "INFO";
+int LOG_PERIOD_MS = 2000;
+
+bool configureLogging(const rclcpp::Node::SharedPtr &n)
+{
+    LOG_LEVEL = n->declare_parameter<std::string>("logging.level", "INFO");
+    LOG_PERIOD_MS = n->declare_parameter<int>("logging.period_ms", 2000);
+
+    std::transform(LOG_LEVEL.begin(), LOG_LEVEL.end(), LOG_LEVEL.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+
+    int severity = RCUTILS_LOG_SEVERITY_INFO;
+    if (LOG_LEVEL == "DEBUG")
+        severity = RCUTILS_LOG_SEVERITY_DEBUG;
+    else if (LOG_LEVEL == "INFO")
+        severity = RCUTILS_LOG_SEVERITY_INFO;
+    else if (LOG_LEVEL == "WARNING" || LOG_LEVEL == "WARN")
+        severity = RCUTILS_LOG_SEVERITY_WARN;
+    else if (LOG_LEVEL == "ERROR")
+        severity = RCUTILS_LOG_SEVERITY_ERROR;
+    else if (LOG_LEVEL == "CRITICAL" || LOG_LEVEL == "FATAL")
+        severity = RCUTILS_LOG_SEVERITY_FATAL;
+    else
+    {
+        RCLCPP_ERROR(n->get_logger(),
+                     "Invalid logging.level '%s'. Expected DEBUG, INFO, WARNING, ERROR or CRITICAL.",
+                     LOG_LEVEL.c_str());
+        return false;
+    }
+
+    if (LOG_PERIOD_MS < 0)
+    {
+        RCLCPP_ERROR(n->get_logger(), "logging.period_ms must be greater than or equal to zero.");
+        return false;
+    }
+
+    rcutils_logging_set_default_logger_level(severity);
+    if (rcutils_logging_set_logger_level(n->get_logger().get_name(), severity) != RCUTILS_RET_OK)
+    {
+        RCLCPP_ERROR(n->get_logger(), "Failed to set logger level to %s.", LOG_LEVEL.c_str());
+        return false;
+    }
+
+    RCLCPP_INFO(n->get_logger(), "Logging configured: level=%s, period_ms=%d",
+                LOG_LEVEL.c_str(), LOG_PERIOD_MS);
+    return true;
+}
 
 template <typename T>
 T readParam(rclcpp::Node::SharedPtr n, std::string name)
