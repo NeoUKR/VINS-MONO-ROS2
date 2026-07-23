@@ -100,6 +100,8 @@ class Estimator
     bool first_imu;
     bool is_valid, is_key;
     bool failure_occur;
+    bool initialization_imu_excitation_insufficient;
+    bool initialization_visual_motion_insufficient;
 
     vector<Vector3d> point_cloud;
     vector<Vector3d> margin_cloud;

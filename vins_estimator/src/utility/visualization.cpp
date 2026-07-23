@@ -1,4 +1,10 @@
 #include "visualization.h"
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <mutex>
+#include <sstream>
+#include <rcutils/logging.h>
 
 using namespace Eigen;
 
@@ -22,6 +28,9 @@ CameraPoseVisualization cameraposevisual(0, 1, 0, 1);
 CameraPoseVisualization keyframebasevisual(0.0, 0.0, 1.0, 1.0);
 static double sum_of_path = 0;
 static Vector3d last_path(0.0, 0.0, 0.0);
+static std::mutex runtime_status_mutex;
+static bool runtime_status_active = false;
+static std::chrono::steady_clock::time_point last_runtime_status_time;
 
 static std::shared_ptr<tf2_ros::TransformBroadcaster> br;
 
@@ -75,31 +84,61 @@ void logStatistics(
     double processing_time_ms,
     const std_msgs::msg::Header &header,
     const rclcpp::Logger &logger,
-    const rclcpp::Clock::SharedPtr &clock,
     int period_ms)
 {
-    const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
-    if (estimator.solver_flag == Estimator::SolverFlag::INITIAL)
-    {
-        RCLCPP_INFO_THROTTLE(
-            logger, *clock, period_ms,
-            "state=INITIALIZING stamp=%.9f window_frames=%d/%d tracked_features=%d processing_ms=%.3f",
-            stamp, estimator.frame_count, WINDOW_SIZE,
-            estimator.f_manager.last_track_num, processing_time_ms);
+    if (!rcutils_logging_logger_is_enabled_for(
+            logger.get_name(), RCUTILS_LOG_SEVERITY_INFO))
         return;
+
+    const auto now = std::chrono::steady_clock::now();
+    {
+        std::lock_guard<std::mutex> lock(runtime_status_mutex);
+        if (runtime_status_active && period_ms > 0 &&
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                now - last_runtime_status_time).count() < period_ms)
+            return;
+        last_runtime_status_time = now;
     }
 
-    const Eigen::Vector3d ypr = Utility::R2ypr(estimator.Rs[WINDOW_SIZE]);
-    RCLCPP_INFO_THROTTLE(
-        logger, *clock, period_ms,
-        "state=TRACKING stamp=%.9f position=[%.3f %.3f %.3f] "
-        "orientation_ypr_deg=[%.3f %.3f %.3f] velocity=[%.3f %.3f %.3f] "
-        "features=%d time_offset=%.6f processing_ms=%.3f",
-        stamp,
-        estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z(),
-        ypr.x(), ypr.y(), ypr.z(),
-        estimator.Vs[WINDOW_SIZE].x(), estimator.Vs[WINDOW_SIZE].y(), estimator.Vs[WINDOW_SIZE].z(),
-        estimator.f_manager.last_track_num, estimator.td, processing_time_ms);
+    const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
+    std::ostringstream status;
+    status << std::fixed;
+    if (estimator.solver_flag == Estimator::SolverFlag::INITIAL)
+    {
+        status << "state=INITIALIZING stamp=" << std::setprecision(9) << stamp
+               << " window_frames=" << estimator.frame_count << "/" << WINDOW_SIZE
+               << " tracked_features=" << estimator.f_manager.last_track_num
+               << " processing_ms=" << std::setprecision(3) << processing_time_ms;
+        if (estimator.initialization_imu_excitation_insufficient)
+            status << " imu_excitation=INSUFFICIENT";
+        if (estimator.initialization_visual_motion_insufficient)
+            status << " visual_motion=INSUFFICIENT";
+    }
+    else
+    {
+        const Eigen::Vector3d ypr = Utility::R2ypr(estimator.Rs[WINDOW_SIZE]);
+        status << "state=TRACKING stamp=" << std::setprecision(9) << stamp
+               << std::setprecision(3)
+               << " position=[" << estimator.Ps[WINDOW_SIZE].x() << " "
+               << estimator.Ps[WINDOW_SIZE].y() << " "
+               << estimator.Ps[WINDOW_SIZE].z() << "]"
+               << " orientation_ypr_deg=[" << ypr.x() << " " << ypr.y() << " " << ypr.z() << "]"
+               << " velocity=[" << estimator.Vs[WINDOW_SIZE].x() << " "
+               << estimator.Vs[WINDOW_SIZE].y() << " "
+               << estimator.Vs[WINDOW_SIZE].z() << "]"
+               << " features=" << estimator.f_manager.last_track_num
+               << " time_offset=" << std::setprecision(6) << estimator.td
+               << " processing_ms=" << std::setprecision(3) << processing_time_ms;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(runtime_status_mutex);
+        std::cout << "\r\033[2K" << status.str() << std::flush;
+        runtime_status_active = true;
+    }
+
+    if (estimator.solver_flag == Estimator::SolverFlag::INITIAL)
+        return;
 
     if (ESTIMATE_EXTRINSIC)
     {
@@ -124,6 +163,15 @@ void logStatistics(
     sum_of_path += (estimator.Ps[WINDOW_SIZE] - last_path).norm();
     last_path = estimator.Ps[WINDOW_SIZE];
     RCUTILS_LOG_DEBUG("sum of path %f", sum_of_path);
+}
+
+void finishRuntimeStatusLine()
+{
+    std::lock_guard<std::mutex> lock(runtime_status_mutex);
+    if (!runtime_status_active)
+        return;
+    std::cout << std::endl;
+    runtime_status_active = false;
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::msg::Header &header)

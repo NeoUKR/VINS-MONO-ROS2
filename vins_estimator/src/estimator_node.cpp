@@ -54,6 +54,7 @@ void logStateTransition(
     if (!estimator_node || previous == current)
         return;
 
+    finishRuntimeStatusLine();
     const double stamp = header.stamp.sec + header.stamp.nanosec * 1e-9;
     RCLCPP_INFO(estimator_node->get_logger(), "[STATE END] %s stamp=%.9f",
                 stateName(previous), stamp);
@@ -236,6 +237,7 @@ void restart_callback(const std_msgs::msg::Bool::SharedPtr restart_msg)
 {
     if (restart_msg->data == true)
     {
+        finishRuntimeStatusLine();
         RCLCPP_WARN(estimator_node->get_logger(), "Estimator restart requested.");
         const Estimator::SolverFlag previous_state = estimator.solver_flag;
         m_buf.lock();
@@ -379,7 +381,7 @@ void process()
             double whole_t = t_s.toc();
             logStatistics(
                 estimator, whole_t, img_msg->header,
-                estimator_node->get_logger(), estimator_node->get_clock(), LOG_PERIOD_MS);
+                estimator_node->get_logger(), LOG_PERIOD_MS);
             std_msgs::msg::Header header = img_msg->header;
             header.frame_id = "world";
 

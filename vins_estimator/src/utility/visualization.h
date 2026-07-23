@@ -41,8 +41,9 @@ void logStatistics(
     double processing_time_ms,
     const std_msgs::msg::Header &header,
     const rclcpp::Logger &logger,
-    const rclcpp::Clock::SharedPtr &clock,
     int period_ms);
+
+void finishRuntimeStatusLine();
 
 void pubOdometry(const Estimator &estimator, const std_msgs::msg::Header &header);
 

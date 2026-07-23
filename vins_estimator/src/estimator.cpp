@@ -1,12 +1,6 @@
 #include "estimator.h"
 #include <sstream>
 
-namespace
-{
-rclcpp::Logger core_logger = rclcpp::get_logger("vins_estimator.core");
-rclcpp::Clock core_log_clock(RCL_STEADY_TIME);
-}
-
 Estimator::Estimator(): f_manager{Rs}
 {
     clearState();
@@ -81,6 +75,8 @@ void Estimator::clearState()
     f_manager.clearState();
 
     failure_occur = 0;
+    initialization_imu_excitation_insufficient = false;
+    initialization_visual_motion_insufficient = false;
     relocalization_info = 0;
 
     drift_correct_r = Matrix3d::Identity();
@@ -226,6 +222,8 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
 bool Estimator::initialStructure()
 {
     TicToc t_sfm;
+    initialization_imu_excitation_insufficient = false;
+    initialization_visual_motion_insufficient = false;
     //check imu observibility
     {
         map<double, ImageFrame>::iterator frame_it;
@@ -250,9 +248,7 @@ bool Estimator::initialStructure()
         //ROS_WARN("IMU variation %f!", var);
         if(var < 0.25)
         {
-            RCLCPP_INFO_THROTTLE(
-                core_logger, core_log_clock, LOG_PERIOD_MS,
-                "IMU excitation is insufficient for initialization.");
+            initialization_imu_excitation_insufficient = true;
             //return false;
         }
     }
@@ -280,9 +276,7 @@ bool Estimator::initialStructure()
     int l;
     if (!relativePose(relative_R, relative_T, l))
     {
-        RCLCPP_INFO_THROTTLE(
-            core_logger, core_log_clock, LOG_PERIOD_MS,
-            "Not enough features or parallax; move the device around.");
+        initialization_visual_motion_insufficient = true;
         return false;
     }
     GlobalSFM sfm;
