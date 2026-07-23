@@ -6,7 +6,7 @@ The product version uses four numeric components: `MAJOR.MINOR.FEATURE.PATCH`.
 Git tags use the corresponding `vMAJOR_MINOR_FEATURE_PATCH` format, with
 two-digit zero-padded components after the major version.
 
-## [v1_00_01_07] - 2026-07-23
+## [v0_00_01_07] - 2026-07-23
 
 ### Added
 
@@ -22,7 +22,7 @@ two-digit zero-padded components after the major version.
 - Initialized the IMU excitation accumulator to zero before summing
   preintegrated accelerations.
 
-## [v1_00_01_05] - 2026-07-23
+## [v0_00_01_05] - 2026-07-23
 
 ### Changed
 
@@ -38,7 +38,7 @@ two-digit zero-padded components after the major version.
   startup, runtime states, initialization output, diagnostics, version
   reporting, log levels, color output, and INFO throttling.
 
-## [v1_00_01_04] - 2026-07-23
+## [v0_00_01_04] - 2026-07-23
 
 ### Fixed
 
@@ -52,7 +52,7 @@ two-digit zero-padded components after the major version.
   including pose, velocity, biases, gravity, timing, camera count, extrinsic
   mode, and per-camera extrinsic parameters.
 
-## [v1_00_01_03] - 2026-07-23
+## [v0_00_01_03] - 2026-07-23
 
 ### Added
 
@@ -69,7 +69,7 @@ two-digit zero-padded components after the major version.
 - Low-level initialization and marginalization details are available only at
   the DEBUG level.
 
-## [v1_00_01_02] - 2026-07-23
+## [v0_00_01_02] - 2026-07-23
 
 ### Changed
 
@@ -77,7 +77,7 @@ two-digit zero-padded components after the major version.
   status line instead of appending one line per reporting interval.
 - Initialization diagnostics are consolidated into the live status line.
 
-## [v1_00_01_01] - 2026-07-23
+## [v0_00_01_01] - 2026-07-23
 
 ### Added
 
@@ -87,10 +87,10 @@ two-digit zero-padded components after the major version.
 
 ### Changed
 
-- All ROS package manifests now report the ROS-compatible version `1.0.1`.
-- Product versioning now uses the four-component `1.0.1.1` format.
+- All ROS package manifests now report the ROS-compatible version `0.0.1`.
+- Product versioning now uses the four-component `0.0.1.1` format.
 
-## [v1_00_01_00] - 2026-07-23
+## [v0_00_01_00] - 2026-07-23
 
 ### Added
 
@@ -105,7 +105,7 @@ two-digit zero-padded components after the major version.
 - Feature tracking and RViz can now be launched separately.
 - Critical estimator conditions are reported at the `ERROR` level.
 
-## [v1_00_00_00] - 2026-07-23
+## [v0_00_00_00] - 2026-07-23
 
 Initial release of the VINS-MONO ROS 2 port.
 
@@ -117,11 +117,11 @@ Initial release of the VINS-MONO ROS 2 port.
 - RViz configurations and sample benchmark data.
 - Initial project documentation and GPLv3 licensing information.
 
-[v1_00_01_07]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_07
-[v1_00_01_05]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_05
-[v1_00_01_04]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_04
-[v1_00_01_03]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_03
-[v1_00_01_02]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_02
-[v1_00_01_01]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_01
-[v1_00_01_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_01_00
-[v1_00_00_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v1_00_00_00
+[v0_00_01_07]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_07
+[v0_00_01_05]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_05
+[v0_00_01_04]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_04
+[v0_00_01_03]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_03
+[v0_00_01_02]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_02
+[v0_00_01_01]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_01
+[v0_00_01_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_00
+[v0_00_00_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_00_00

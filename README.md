@@ -1,6 +1,6 @@
 # VINS-MONO-ROS2
 ## ROS2 version of VINS-MONO
-**Current version: [v1_00_01_07](CHANGELOG.md#v1_00_01_07---2026-07-23)**
+**Current version: [v0_00_01_07](CHANGELOG.md#v0_00_01_07---2026-07-23)**
 
 ## Документація українською
 
