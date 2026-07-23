@@ -5,6 +5,7 @@
 ## Документація українською
 
 - [Посібник користувача: встановлення, конфігурація, запуск і діагностика](docs/README_UK.md)
+- [Docker: розгортання, ARM64/Raspberry Pi, shell і тестування](docs/DOCKER_UK.md)
 - [Журналювання, рівні, період INFO та формати станів](docs/LOGGING_UK.md)
 - [Історія змін](CHANGELOG.md)
 
@@ -25,19 +26,21 @@ This repository implements the ROS2 version of VINS-MONO, mainly including the f
 ![mh02](https://github.com/dongbo19/VINS-MONO-ROS2/blob/main/config_pkg/config/gif/vins_ros2_mh02.gif)
 # 2. Prerequisites
 * System  
-  * Ubuntu 20.04  
-  * ROS2 foxy
+  * Ubuntu 24.04
+  * ROS 2 Jazzy
 * Libraries
-  * OpenCV 4.2.0
-  * [Ceres Solver](http://ceres-solver.org/installation.html) 1.14.0
-  * Eigen 3.3.7
+  * OpenCV 4.6.0
+  * [Ceres Solver](http://ceres-solver.org/installation.html) 2.2.0
+  * Eigen 3.4.0
 # 3. Build VINS-MONO-ROS2
 
 ## Docker (Windows 11, Linux, macOS)
 
 Docker provides the supported Ubuntu 24.04 and ROS 2 Jazzy environment on any
-host operating system. On Windows 11, install Docker Desktop and enable the WSL
-2 backend, then run these commands from PowerShell in the repository directory:
+host operating system. The complete Ukrainian guide is available in
+[docs/DOCKER_UK.md](docs/DOCKER_UK.md). On Windows 11, install Docker Desktop,
+enable the WSL 2 backend, then run these commands from PowerShell in the
+repository directory:
 
 ```powershell
 docker compose build

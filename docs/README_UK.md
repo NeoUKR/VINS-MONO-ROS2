@@ -4,6 +4,10 @@
 VINS-MONO-ROS2. Окремий детальний опис журналювання наведено в
 [LOGGING_UK.md](LOGGING_UK.md).
 
+Розгортання через Docker на Windows 11, Linux і Raspberry Pi ARM64, робота з
+інтерактивним shell, ROS 2 smoke-тести та перенесення ARM64-образу описані в
+[DOCKER_UK.md](DOCKER_UK.md).
+
 ## 1. Призначення
 
 VINS-Mono — система візуально-інерціальної одометрії для однієї камери та
