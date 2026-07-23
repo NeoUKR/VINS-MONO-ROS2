@@ -1,6 +1,6 @@
 # VINS-MONO-ROS2
 ## ROS2 version of VINS-MONO
-**Current version: [v01_01_00](CHANGELOG.md#v01_01_00---2026-07-23)**
+**Current version: [v01_01_01](CHANGELOG.md#v01_01_01---2026-07-23)**
 
 **New: Code has been adapted for Ubuntu 24.04. See the ros2_jazzy branch for details.**
 # 1. Introduction

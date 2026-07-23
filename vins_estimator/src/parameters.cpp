@@ -68,8 +68,6 @@ bool configureLogging(const rclcpp::Node::SharedPtr &n)
         return false;
     }
 
-    RCLCPP_INFO(n->get_logger(), "Logging configured: level=%s, period_ms=%d",
-                LOG_LEVEL.c_str(), LOG_PERIOD_MS);
     return true;
 }
 

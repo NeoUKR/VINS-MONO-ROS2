@@ -1,6 +1,12 @@
 #include "estimator.h"
 #include <sstream>
 
+namespace
+{
+rclcpp::Logger core_logger = rclcpp::get_logger("vins_estimator.core");
+rclcpp::Clock core_log_clock(RCL_STEADY_TIME);
+}
+
 Estimator::Estimator(): f_manager{Rs}
 {
     clearState();
@@ -244,7 +250,9 @@ bool Estimator::initialStructure()
         //ROS_WARN("IMU variation %f!", var);
         if(var < 0.25)
         {
-            RCUTILS_LOG_INFO("IMU excitation not enouth!");
+            RCLCPP_INFO_THROTTLE(
+                core_logger, core_log_clock, LOG_PERIOD_MS,
+                "IMU excitation is insufficient for initialization.");
             //return false;
         }
     }
@@ -272,7 +280,9 @@ bool Estimator::initialStructure()
     int l;
     if (!relativePose(relative_R, relative_T, l))
     {
-        RCUTILS_LOG_INFO("Not enough features or parallax; Move device around");
+        RCLCPP_INFO_THROTTLE(
+            core_logger, core_log_clock, LOG_PERIOD_MS,
+            "Not enough features or parallax; move the device around.");
         return false;
     }
     GlobalSFM sfm;

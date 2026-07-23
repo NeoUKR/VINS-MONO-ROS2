@@ -4,6 +4,18 @@ All notable changes to VINS-MONO-ROS2 are documented in this file.
 
 The project uses release identifiers in the `vMAJOR_MINOR_PATCH` format.
 
+## [v01_01_01] - 2026-07-23
+
+### Added
+
+- Estimator version banner at process startup.
+- `--version` and `-V` command-line options for querying the installed
+  estimator version.
+
+### Changed
+
+- All ROS package manifests now report version `1.1.1`.
+
 ## [v01_01_00] - 2026-07-23
 
 ### Added
@@ -31,5 +43,6 @@ Initial release of the VINS-MONO ROS 2 port.
 - RViz configurations and sample benchmark data.
 - Initial project documentation and GPLv3 licensing information.
 
+[v01_01_01]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v01_01_01
 [v01_01_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v01_01_00
 [v01_00_00]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v01_00_00

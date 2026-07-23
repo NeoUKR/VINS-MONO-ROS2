@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(vins_estimator)
+project(vins_estimator VERSION 1.1.1)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 14)
@@ -23,7 +23,14 @@ find_package(OpenCV 4 REQUIRED)
 
 find_package(Ceres REQUIRED)
 
+configure_file(
+  src/version.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/generated/version.h
+  @ONLY
+)
+
 include_directories(${CERES_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 include_directories("../camera_models/include")
 

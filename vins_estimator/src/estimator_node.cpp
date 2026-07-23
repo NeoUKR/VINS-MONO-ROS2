@@ -11,6 +11,7 @@
 #include "estimator.h"
 #include "parameters.h"
 #include "utility/visualization.h"
+#include "version.h"
 
 
 Estimator estimator;
@@ -404,6 +405,16 @@ void process()
 
 int main(int argc, char **argv)
 {
+    if (argc == 2 &&
+        (std::string(argv[1]) == "--version" || std::string(argv[1]) == "-V"))
+    {
+        std::cout << "VINS-MONO ROS 2 " << VINS_MONO_VERSION
+                  << " (" << VINS_MONO_RELEASE_TAG << ")" << std::endl;
+        return 0;
+    }
+
+    std::cout << "VINS-MONO ROS 2 " << VINS_MONO_VERSION
+              << " (" << VINS_MONO_RELEASE_TAG << ")" << std::endl;
     rclcpp::init(argc, argv);
     auto n = rclcpp::Node::make_shared("vins_estimator");
     estimator_node = n;
@@ -412,6 +423,10 @@ int main(int argc, char **argv)
         rclcpp::shutdown();
         return 1;
     }
+    RCLCPP_INFO(n->get_logger(), "VINS-MONO ROS 2 version=%s release=%s",
+                VINS_MONO_VERSION, VINS_MONO_RELEASE_TAG);
+    RCLCPP_INFO(n->get_logger(), "Logging configured: level=%s, period_ms=%d",
+                LOG_LEVEL.c_str(), LOG_PERIOD_MS);
     readParameters(n);
     estimator.setParameter();
 #ifdef EIGEN_DONT_PARALLELIZE

@@ -1,0 +1,4 @@
+#pragma once
+
+#define VINS_MONO_VERSION "@PROJECT_VERSION@"
+#define VINS_MONO_RELEASE_TAG "v01_01_01"
