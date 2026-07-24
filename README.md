@@ -1,6 +1,6 @@
 # VINS-MONO-ROS2
 ## ROS2 version of VINS-MONO
-**Current version: [v0_00_01_07](CHANGELOG.md#v0_00_01_07---2026-07-23)**
+**Current version: [v1_00_01_07](CHANGELOG.md#v1_00_01_07---2026-07-24)**
 
 ## Документація українською
 
@@ -8,6 +8,7 @@
 - [Docker: розгортання, ARM64/Raspberry Pi, shell і тестування](docs/DOCKER_UK.md)
 - [Журналювання, рівні, період INFO та формати станів](docs/LOGGING_UK.md)
 - [Історія змін](CHANGELOG.md)
+- [Стандарти розробки та версіонування](docs/DEVELOPMENT_STANDARDS_UK.md)
 
 **New: Code has been adapted for Ubuntu 24.04. See the ros2_jazzy branch for details.**
 # 1. Introduction

@@ -6,7 +6,7 @@ The product version uses four numeric components: `MAJOR.MINOR.FEATURE.PATCH`.
 Git tags use the corresponding `vMAJOR_MINOR_FEATURE_PATCH` format, with
 two-digit zero-padded components after the major version.
 
-## [v0_00_01_07] - 2026-07-23
+## [v1_00_01_07] - 2026-07-24
 
 ### Added
 
@@ -132,7 +132,7 @@ Initial release of the VINS-MONO ROS 2 port.
 - RViz configurations and sample benchmark data.
 - Initial project documentation and GPLv3 licensing information.
 
-[v0_00_01_07]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_07
+[v1_00_01_07]: https://github.com/NeoUKR/VINS-NEO/releases/tag/v1_00_01_07
 [v0_00_01_05]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_05
 [v0_00_01_04]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_04
 [v0_00_01_03]: https://github.com/NeoUKR/VINS-MONO-ROS2/releases/tag/v0_00_01_03
