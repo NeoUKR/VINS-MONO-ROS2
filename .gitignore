@@ -38,3 +38,4 @@ results/
 .DS_Store
 Thumbs.db
 .ssh_known_hosts
+tools/vins_test/vins_test.py

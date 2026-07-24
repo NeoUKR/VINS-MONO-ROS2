@@ -1,0 +1,16 @@
+.git
+.agents
+build
+install
+log
+data
+output
+results
+.idea
+.vscode
+__pycache__
+*.bag
+*.bag.active
+*.db3
+*.mcap
+*.log
