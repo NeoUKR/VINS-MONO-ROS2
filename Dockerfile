@@ -29,7 +29,11 @@ WORKDIR ${VINS_WS}
 FROM dependencies AS development
 
 COPY docker/entrypoint.sh /usr/local/bin/vins-entrypoint
-RUN chmod +x /usr/local/bin/vins-entrypoint
+COPY docker/bash_env.sh /usr/local/share/vins/bash_env.sh
+RUN sed -i 's/\r$//' \
+        /usr/local/bin/vins-entrypoint \
+        /usr/local/share/vins/bash_env.sh \
+    && chmod +x /usr/local/bin/vins-entrypoint
 
 ENTRYPOINT ["/usr/local/bin/vins-entrypoint"]
 CMD ["shell"]
@@ -39,3 +43,5 @@ FROM development AS build
 COPY . ${VINS_WS}
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
     && colcon build --merge-install --executor sequential
+
+ENV BASH_ENV=/usr/local/share/vins/bash_env.sh

@@ -52,7 +52,7 @@ extrinsicTranslation: !!opencv-matrix
 #feature traker paprameters max_cnt: 250
 max_cnt: 240            # max feature number in feature tracking
 min_dist: 25            # min distance between two features 
-freq: 12.5                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
+freq: 12                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
 F_threshold: 1.2        # ransac threshold (pixel)
 show_track: 0           # publish tracking image as topic
 equalize: 0            # if image is too dark or light, trun on equalize to find enough features
@@ -77,8 +77,8 @@ fast_relocalization: 0             # useful in real-time and large project
 pose_graph_save_path: "/tmp/vins_output/pose_graph/" # save and load path
 
 #unsynchronization parameters
-estimate_td: 0                     # online estimate time offset between camera and imu
-td: 0.002
+estimate_td: 1                     # online estimate time offset between camera and imu
+#td: 0.0016
 
 
 #rolling shutter parameters
