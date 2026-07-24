@@ -16,11 +16,26 @@ two-digit zero-padded components after the major version.
 - Added time-offset estimation mode, extrinsic parameter source, and aggregate
   triangulated-feature depth statistics without dumping individual landmarks
   or feature tracks.
+- Added RViz2 to the Docker runtime and a standalone VINS RViz launch file.
 
 ### Fixed
 
 - Initialized the IMU excitation accumulator to zero before summing
   preintegrated accelerations.
+- Migrated the custom pose, quaternion, and yaw parameterizations from the
+  removed Ceres `LocalParameterization` API to the Ceres 2 `Manifold` API.
+- Replaced non-standard variable-length arrays and deprecated ROS message
+  pointer aliases for C++17 and ROS 2 Jazzy compatibility.
+
+### Changed
+
+- All project packages now compile as C++17.
+- OpenCV color conversion constants use the OpenCV 4 API.
+
+### Documentation
+
+- Documented the verified Windows 11 ARM64 Docker build and smoke-test for
+  ROS 2 Jazzy, OpenCV 4.6, Ceres 2.2, and Eigen 3.4.
 
 ## [v0_00_01_05] - 2026-07-23
 

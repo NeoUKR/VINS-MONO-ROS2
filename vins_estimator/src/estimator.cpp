@@ -260,8 +260,8 @@ bool Estimator::initialStructure()
         }
     }
     // global sfm
-    Quaterniond Q[frame_count + 1];
-    Vector3d T[frame_count + 1];
+    vector<Quaterniond> Q(frame_count + 1);
+    vector<Vector3d> T(frame_count + 1);
     map<int, Vector3d> sfm_tracked_points;
     vector<SFMFeature> sfm_f;
     for (auto &it_per_id : f_manager.feature)
@@ -287,7 +287,7 @@ bool Estimator::initialStructure()
         return false;
     }
     GlobalSFM sfm;
-    if(!sfm.construct(frame_count + 1, Q, T, l,
+    if(!sfm.construct(frame_count + 1, Q.data(), T.data(), l,
               relative_R, relative_T,
               sfm_f, sfm_tracked_points))
     {
@@ -692,14 +692,12 @@ void Estimator::optimization()
     loss_function = new ceres::CauchyLoss(1.0);
     for (int i = 0; i < WINDOW_SIZE + 1; i++)
     {
-        ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
-        problem.AddParameterBlock(para_Pose[i], SIZE_POSE, local_parameterization);
+        problem.AddParameterBlock(para_Pose[i], SIZE_POSE, new PoseManifold());
         problem.AddParameterBlock(para_SpeedBias[i], SIZE_SPEEDBIAS);
     }
     for (int i = 0; i < NUM_OF_CAM; i++)
     {
-        ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
-        problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE, local_parameterization);
+        problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE, new PoseManifold());
         if (!ESTIMATE_EXTRINSIC)
         {
             RCUTILS_LOG_DEBUG("fix extinsic param");
@@ -786,8 +784,7 @@ void Estimator::optimization()
     if(relocalization_info)
     {
         //printf("set relocalization factor! \n");
-        ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
-        problem.AddParameterBlock(relo_Pose, SIZE_POSE, local_parameterization);
+        problem.AddParameterBlock(relo_Pose, SIZE_POSE, new PoseManifold());
         int retrive_feature_index = 0;
         int feature_index = -1;
         for (auto &it_per_id : f_manager.feature)

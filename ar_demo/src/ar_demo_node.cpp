@@ -348,7 +348,7 @@ void draw_object(cv::Mat &AR_image)
     }
 }
 
-void callback(const sensor_msgs::msg::Image::SharedPtr img_msg, const nav_msgs::msg::Odometry::ConstPtr pose_msg)
+void callback(const sensor_msgs::msg::Image::SharedPtr img_msg, const nav_msgs::msg::Odometry::ConstSharedPtr pose_msg)
 {
     //throw the first few unstable pose
     if(img_cnt < 50)

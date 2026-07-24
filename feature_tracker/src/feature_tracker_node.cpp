@@ -13,7 +13,7 @@
 
 vector<uchar> r_status;
 vector<float> r_err;
-queue<sensor_msgs::msg::Image::ConstPtr> img_buf;
+queue<sensor_msgs::msg::Image::ConstSharedPtr> img_buf;
 
 rclcpp::Publisher<sensor_msgs::msg::PointCloud>::SharedPtr pub_img;
 rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_match;
@@ -180,7 +180,7 @@ void img_callback(const sensor_msgs::msg::Image::SharedPtr img_msg)
             for (int i = 0; i < NUM_OF_CAM; i++)
             {
                 cv::Mat tmp_img = stereo_img.rowRange(i * ROW, (i + 1) * ROW);
-                cv::cvtColor(show_img, tmp_img, CV_GRAY2RGB);
+                cv::cvtColor(show_img, tmp_img, cv::COLOR_GRAY2RGB);
 
                 for (unsigned int j = 0; j < trackerData[i].cur_pts.size(); j++)
                 {

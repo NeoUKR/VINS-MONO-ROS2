@@ -23,7 +23,7 @@ case "${1:-shell}" in
     shift
     build_workspace
     source_workspace
-    colcon test "$@"
+    colcon test --merge-install "$@"
     colcon test-result --verbose
     ;;
   version)

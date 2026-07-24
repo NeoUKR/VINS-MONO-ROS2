@@ -171,6 +171,22 @@ docker compose -f compose.yaml -f compose.arm64.yaml run --rm vins test
 docker compose -f compose.yaml -f compose.arm64.yaml run --rm vins version
 ```
 
+Комплексна smoke-перевірка встановленого workspace:
+
+```powershell
+docker compose -f compose.yaml -f compose.arm64.yaml run --rm vins shell -lc `
+  "uname -m && env | grep ROS_DISTRO && pkg-config --modversion opencv4 && dpkg-query -W libceres-dev && pkg-config --modversion eigen3 && ros2 pkg executables"
+```
+
+Очікуваний базовий результат: `aarch64`, `ROS_DISTRO=jazzy`, OpenCV `4.6.0`,
+Ceres `2.2.0`, Eigen `3.4.0`, а також executable `feature_tracker`,
+`vins_estimator`, `pose_graph`, `ar_demo` і `benchmark_publisher`.
+
+Повну ARM64-збірку семи пакетів перевірено локально на Windows 11 через
+Docker Desktop. Код адаптовано до C++17 і актуального Ceres Manifold API.
+Алгоритмічну перевірку VINS із реальними даними потрібно виконати окремо
+після монтування ROS 2 bag.
+
 ## 9. Volumes і datasets
 
 Compose зберігає результати між контейнерами:
@@ -259,6 +275,38 @@ $env:ROS_DOMAIN_ID = "0"
 
 Контейнери також повинні належати одному Compose project/network.
 
+### RViz2 на Windows 11
+
+RViz2 є графічною Linux-програмою. Для показу вікна з Docker Desktop
+встановіть і запустіть X server для Windows, наприклад VcXsrv. Для локального
+тестування дозвольте підключення Docker-контейнера, а перед запуском Compose
+задайте:
+
+```powershell
+$env:DISPLAY = "host.docker.internal:0.0"
+docker compose -f compose.yaml -f compose.arm64.yaml run --rm vins shell
+```
+
+У shell контейнера запустіть окреме вікно RViz2:
+
+```bash
+ros2 launch feature_tracker vins_rviz.launch.py
+```
+
+Launch використовує готову конфігурацію
+`config_pkg/config/vins_euroc_rviz.rviz`. Якщо feature tracker ще не
+запущений, його потрібно запустити в іншому shell:
+
+```bash
+ros2 launch feature_tracker vins_feature_tracker.launch.py
+```
+
+Альтернативний launch одночасно запускає tracker і RViz2:
+
+```bash
+ros2 launch feature_tracker vins_feature_tracker_rviz.launch.py
+```
+
 ### Повністю чиста збірка
 
 Наступна команда видаляє build/install/log volumes і весь кеш workspace:
@@ -268,4 +316,3 @@ docker compose -f compose.yaml -f compose.arm64.yaml down -v
 ```
 
 Використовуйте її лише коли справді потрібна чиста повторна збірка.
-

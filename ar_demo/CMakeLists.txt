@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 project(ar_demo)
 
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wextra -Wpedantic)
 
 find_package(ament_cmake REQUIRED)
@@ -29,7 +30,7 @@ include_directories(
 
 add_executable(ar_demo_node src/ar_demo_node.cpp)
 
-ament_target_dependencies(ar_demo_node rclcpp rcpputils std_msgs sensor_msgs geometry_msgs visualization_msgs nav_msgs cv_bridge camera_model image_transport)
+ament_target_dependencies(ar_demo_node rclcpp rcpputils std_msgs sensor_msgs geometry_msgs visualization_msgs nav_msgs cv_bridge camera_model image_transport message_filters)
 
 target_link_libraries(ar_demo_node ${OpenCV_LIBS}) 
 

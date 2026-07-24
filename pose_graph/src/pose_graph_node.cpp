@@ -24,9 +24,9 @@
 #define SKIP_FIRST_CNT 10
 using namespace std;
 
-queue<sensor_msgs::msg::Image::ConstPtr> image_buf;
-queue<sensor_msgs::msg::PointCloud::ConstPtr> point_buf;
-queue<nav_msgs::msg::Odometry::ConstPtr> pose_buf;
+queue<sensor_msgs::msg::Image::ConstSharedPtr> image_buf;
+queue<sensor_msgs::msg::PointCloud::ConstSharedPtr> point_buf;
+queue<nav_msgs::msg::Odometry::ConstSharedPtr> pose_buf;
 queue<Eigen::Vector3d> odometry_buf;
 std::mutex m_buf;
 std::mutex m_process;
@@ -89,7 +89,7 @@ void new_sequence()
     m_buf.unlock();
 }
 
-void image_callback(const sensor_msgs::msg::Image::ConstPtr image_msg)
+void image_callback(const sensor_msgs::msg::Image::ConstSharedPtr image_msg)
 {
     //ROS_INFO("image_callback!");
     if(!LOOP_CLOSURE)
@@ -110,7 +110,7 @@ void image_callback(const sensor_msgs::msg::Image::ConstPtr image_msg)
     last_image_time = image_msg->header.stamp.sec+image_msg->header.stamp.nanosec * (1e-9);
 }
 
-void point_callback(const sensor_msgs::msg::PointCloud::ConstPtr point_msg)
+void point_callback(const sensor_msgs::msg::PointCloud::ConstSharedPtr point_msg)
 {
     //ROS_INFO("point_callback!");
     if(!LOOP_CLOSURE)
@@ -130,7 +130,7 @@ void point_callback(const sensor_msgs::msg::PointCloud::ConstPtr point_msg)
     */
 }
 
-void pose_callback(const nav_msgs::msg::Odometry::ConstPtr pose_msg)
+void pose_callback(const nav_msgs::msg::Odometry::ConstSharedPtr pose_msg)
 {
     //ROS_INFO("pose_callback!");
     if(!LOOP_CLOSURE)
@@ -149,7 +149,7 @@ void pose_callback(const nav_msgs::msg::Odometry::ConstPtr pose_msg)
     */
 }
 
-void imu_forward_callback(const nav_msgs::msg::Odometry::ConstPtr forward_msg)
+void imu_forward_callback(const nav_msgs::msg::Odometry::ConstSharedPtr forward_msg)
 {
     if (VISUALIZE_IMU_FORWARD)
     {
@@ -176,7 +176,7 @@ void imu_forward_callback(const nav_msgs::msg::Odometry::ConstPtr forward_msg)
         cameraposevisual.publish_by(pub_camera_pose_visual, forward_msg->header);
     }
 }
-void relo_relative_pose_callback(const nav_msgs::msg::Odometry::ConstPtr pose_msg)
+void relo_relative_pose_callback(const nav_msgs::msg::Odometry::ConstSharedPtr pose_msg)
 {
     Vector3d relative_t = Vector3d(pose_msg->pose.pose.position.x,
                                    pose_msg->pose.pose.position.y,
@@ -197,7 +197,7 @@ void relo_relative_pose_callback(const nav_msgs::msg::Odometry::ConstPtr pose_ms
 
 }
 
-void vio_callback(const nav_msgs::msg::Odometry::ConstPtr pose_msg)
+void vio_callback(const nav_msgs::msg::Odometry::ConstSharedPtr pose_msg)
 {
     //ROS_INFO("vio_callback!");
     Vector3d vio_t(pose_msg->pose.pose.position.x, pose_msg->pose.pose.position.y, pose_msg->pose.pose.position.z);
@@ -277,7 +277,7 @@ void vio_callback(const nav_msgs::msg::Odometry::ConstPtr pose_msg)
     }
 }
 
-void extrinsic_callback(const nav_msgs::msg::Odometry::ConstPtr pose_msg)
+void extrinsic_callback(const nav_msgs::msg::Odometry::ConstSharedPtr pose_msg)
 {
     m_process.lock();
     tic = Vector3d(pose_msg->pose.pose.position.x,
@@ -296,9 +296,9 @@ void process()
         return;
     while (true)
     {
-        sensor_msgs::msg::Image::ConstPtr image_msg = NULL;
-        sensor_msgs::msg::PointCloud::ConstPtr point_msg = NULL;
-        nav_msgs::msg::Odometry::ConstPtr pose_msg = NULL;
+        sensor_msgs::msg::Image::ConstSharedPtr image_msg = nullptr;
+        sensor_msgs::msg::PointCloud::ConstSharedPtr point_msg = nullptr;
+        nav_msgs::msg::Odometry::ConstSharedPtr pose_msg = nullptr;
 
         // find out the messages with same time stamp
         m_buf.lock();

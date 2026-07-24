@@ -6,9 +6,9 @@ namespace camodocal
 {
 
 bool
-EigenQuaternionParameterization::Plus(const double* x,
-                                      const double* delta,
-                                      double* x_plus_delta) const
+EigenQuaternionManifold::Plus(const double* x,
+                              const double* delta,
+                              double* x_plus_delta) const
 {
     const double norm_delta =
         sqrt(delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]);
@@ -33,13 +33,66 @@ EigenQuaternionParameterization::Plus(const double* x,
 }
 
 bool
-EigenQuaternionParameterization::ComputeJacobian(const double* x,
-                                                 double* jacobian) const
+EigenQuaternionManifold::PlusJacobian(const double* x,
+                                     double* jacobian) const
 {
     jacobian[0] =  x[3]; jacobian[1]  =  x[2]; jacobian[2]  = -x[1];  // NOLINT
     jacobian[3] = -x[2]; jacobian[4]  =  x[3]; jacobian[5]  =  x[0];  // NOLINT
     jacobian[6] =  x[1]; jacobian[7] = -x[0]; jacobian[8] =  x[3];  // NOLINT
     jacobian[9] = -x[0]; jacobian[10]  = -x[1]; jacobian[11]  = -x[2];  // NOLINT
+    return true;
+}
+
+bool
+EigenQuaternionManifold::Minus(const double* y,
+                               const double* x,
+                               double* y_minus_x) const
+{
+    // Plus applies q_delta * x. Therefore q_delta = y * inverse(x).
+    const double x_inverse[4] = {-x[0], -x[1], -x[2], x[3]};
+    double q_delta[4];
+    EigenQuaternionProduct(y, x_inverse, q_delta);
+
+    if (q_delta[3] < 0.0)
+    {
+        for (double& coefficient : q_delta)
+        {
+            coefficient = -coefficient;
+        }
+    }
+
+    const double vector_norm = std::sqrt(q_delta[0] * q_delta[0] +
+                                         q_delta[1] * q_delta[1] +
+                                         q_delta[2] * q_delta[2]);
+    if (vector_norm > 0.0)
+    {
+        const double scale = std::atan2(vector_norm, q_delta[3]) / vector_norm;
+        y_minus_x[0] = scale * q_delta[0];
+        y_minus_x[1] = scale * q_delta[1];
+        y_minus_x[2] = scale * q_delta[2];
+    }
+    else
+    {
+        y_minus_x[0] = 0.0;
+        y_minus_x[1] = 0.0;
+        y_minus_x[2] = 0.0;
+    }
+    return true;
+}
+
+bool
+EigenQuaternionManifold::MinusJacobian(const double* x,
+                                       double* jacobian) const
+{
+    double plus_jacobian[12];
+    PlusJacobian(x, plus_jacobian);
+    for (int row = 0; row < 3; ++row)
+    {
+        for (int column = 0; column < 4; ++column)
+        {
+            jacobian[row * 4 + column] = plus_jacobian[column * 3 + row];
+        }
+    }
     return true;
 }
 
