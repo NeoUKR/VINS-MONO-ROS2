@@ -259,6 +259,77 @@ $env:ROS_DOMAIN_ID = "0"
 
 Контейнери також повинні належати одному Compose project/network.
 
+### Графічний інтерфейс на Windows 11: RViz2
+
+RViz2 у Docker є Linux-графічною програмою. Щоб показати її вікно на
+Windows 11, потрібен X server для Windows, наприклад VcXsrv. Програма
+`XLaunch` входить до складу VcXsrv і запускає та налаштовує X server.
+
+У `XLaunch` виберіть:
+
+1. `Multiple windows`.
+2. `Display number: 0` — не використовуйте автоматичне значення `-1`.
+3. `Start no client`.
+4. `Disable access control` для локального тестування.
+5. За проблем з OpenGL також увімкніть `Disable native OpenGL`.
+
+Дозвольте VcXsrv у Windows Firewall для приватної мережі. Режим
+`Disable access control` послаблює захист X server, тому не використовуйте
+його в недовіреній або публічній мережі.
+
+Перевірте у PowerShell, що display `0` слухає TCP-порт `6000`:
+
+```powershell
+Get-NetTCPConnection -LocalPort 6000 -State Listen
+```
+
+Перед створенням контейнера задайте `DISPLAY`:
+
+```powershell
+$env:DISPLAY = "host.docker.internal:0"
+docker compose -f compose.yaml -f compose.arm64.yaml run --rm vins shell
+```
+
+У контейнері перевірте змінну та доступність X server:
+
+```bash
+echo "$DISPLAY"
+timeout 3 bash -c '</dev/tcp/host.docker.internal/6000' \
+  && echo "X server доступний" \
+  || echo "X server недоступний"
+```
+
+Окремий запуск лише RViz2 з готовою VINS-конфігурацією:
+
+```bash
+export LIBGL_ALWAYS_SOFTWARE=1
+ros2 launch feature_tracker vins_rviz.launch.py
+```
+
+Feature tracker і estimator запускайте в інших Docker shell:
+
+```bash
+ros2 launch feature_tracker vins_feature_tracker.launch.py
+```
+
+```bash
+ros2 launch vins_estimator euroc.launch.py
+```
+
+Альтернативний launch одночасно запускає feature tracker і RViz2:
+
+```bash
+ros2 launch feature_tracker vins_feature_tracker_rviz.launch.py
+```
+
+Якщо Qt повідомляє `could not connect to display`, перевірте, що:
+
+- VcXsrv запущений через `XLaunch`;
+- вибрано `Display number: 0`;
+- Windows Firewall не блокує VcXsrv;
+- контейнер створено після встановлення `$env:DISPLAY`;
+- `echo "$DISPLAY"` у контейнері повертає `host.docker.internal:0`.
+
 ### Повністю чиста збірка
 
 Наступна команда видаляє build/install/log volumes і весь кеш workspace:

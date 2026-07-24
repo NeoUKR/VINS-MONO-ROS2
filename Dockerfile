@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ros-${ROS_DISTRO}-cv-bridge \
         ros-${ROS_DISTRO}-image-transport \
         ros-${ROS_DISTRO}-message-filters \
+        ros-${ROS_DISTRO}-rviz2 \
         ros-${ROS_DISTRO}-tf2-ros \
     && rm -rf /var/lib/apt/lists/*
 
